@@ -61,6 +61,41 @@ services:
     networks:
       cscourse:
         ipv4_address: 172.200.0.5
+  
+  hbase:
+    image: bde2020/hbase-standalone:1.0.0-hbase1.2.6
+    container_name: hbase
+    volumes:
+      - hbase_data:/hbase-data
+      - hbase_zookeeper_data:/zookeeper-data
+    ports:
+      - 16000:16000
+      - 16010:16010
+      - 16020:16020
+      - 16030:16030
+      - 2888:2888
+      - 3888:3888
+      - 2181:2181
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9870 datanode2:9870 datanode3:9870"
+    env_file:
+      - ./hbase-standalone.env
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.6
+  
+  mysql:
+    image: xitric/sfdb:latest
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.7
 
   # resourcemanager: #Yarn
   #   image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.1.2-java8
@@ -137,3 +172,6 @@ volumes:
   hadoop_datanode2:
   hadoop_datanode3:
   hadoop_historyserver:
+  hbase_data:
+  hbase_zookeeper_data:
+  mysql_data:
