@@ -14,7 +14,8 @@ if __name__ == "__main__":
     # os.environ['PYSPARK_SUBMIT_ARGS'] = '--files /Users/Kasper/Desktop/hbase-site.xml pyspark'
     # os.environ['PYSPARK_SUBMIT_ARGS'] = '--jars  lib/shc-core-1.1.3-2.4-s_2.11.jar,/usr/hdp/current/hbase-client/lib/htrace-core-3.1.0-incubating.jar,/usr/hdp/current/hbase-client/lib/hbase-client.jar,/usr/hdp/current/hbase-client/lib/hbase-common.jar,/usr/hdp/current/hbase-client/lib/hbase-server.jar,/usr/hdp/current/hbase-client/lib/guava-12.0.1.jar,/usr/hdp/current/hbase-client/lib/hbase-protocol.jar,/usr/hdp/current/hbase-client/lib/htrace-core-3.1.0-incubating.jar --files /Users/Kasper/Desktop/hbase-site.xml pyspark'
     # os.environ['PYSPARK_SUBMIT_ARGS'] = ("--repositories http://repo.hortonworks.com/content/groups/public/ " "--packages com.hortonworks:shc-core:1.1.1-1.6-s_2.10 " " pyspark-shell")
-    os.environ['PYSPARK_SUBMIT_ARGS'] = ("--master yarn " "--repositories https://repo.hortonworks.com/content/repositories/releases/ " "--packages com.hortonworks:shc-core:1.1.1-2.1-s_2.11 " " --files /app/hbase-site.xml " " pyspark-shell")
+    # os.environ['PYSPARK_SUBMIT_ARGS'] = ("--master yarn " "--repositories https://repo.hortonworks.com/content/repositories/releases/ " "--packages com.hortonworks:shc-core:1.1.1-2.1-s_2.11 " " --files /app/hbase-site.xml " " pyspark-shell")
+    os.environ['PYSPARK_SUBMIT_ARGS'] = ("--master yarn " "--repositories https://repo.hortonworks.com/content/repositories/releases/ " "--packages com.hortonworks.shc:shc-core:1.1.0.3.1.2.1-1 " " --files /app/hbase-site.xml " " pyspark-shell")
 
     # Run Spark locally
     spark_configuration = SparkConf()\
@@ -37,3 +38,4 @@ if __name__ == "__main__":
 
     df = sql.read.options(catalog=catalog).format(DATA_SOURCE_FORMAT).load()
     print(df.count())
+    
