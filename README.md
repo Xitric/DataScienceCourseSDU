@@ -44,3 +44,5 @@ The repositories are as follows:
 
 - <https://github.com/big-data-europe/docker-hadoop>
 - <https://github.com/big-data-europe/docker-spark>
+
+To see more about how the images that are used in this course are constructed, please visit these repositories and explore the DockerFiles in the corresponding directories.

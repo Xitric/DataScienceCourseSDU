@@ -168,10 +168,18 @@ networks:
 
 volumes:
   hadoop_namenode:
+    name: namenode
   hadoop_datanode1:
+    name: datanode1
   hadoop_datanode2:
+    name: datanode2
   hadoop_datanode3:
+    name: datanode3
   hadoop_historyserver:
+    name: historyserver
   hbase_data:
+    name: hbase
   hbase_zookeeper_data:
+    name: hbase_zookeeper
   mysql_data:
+    name: mysql
