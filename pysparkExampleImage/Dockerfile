@@ -4,7 +4,7 @@ LABEL Name=pysparkExampleImage Version=0.0.1
 
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -yq install python3 python3-pip locales
-RUN python3 -m pip install pyspark
+RUN python3 -m pip install pyspark==2.3.4
 RUN apt-get autoremove -y
 RUN apt-get clean
 RUN cp /usr/bin/python3 /usr/bin/python
@@ -18,5 +18,6 @@ ENV LC_ALL en_US.UTF-8
 
 WORKDIR /app
 ADD . /app
+ADD hbase-site.xml /etc/hadoop/hbase-site.xml
 
 CMD ["python3 example.py"]
