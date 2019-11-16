@@ -17,8 +17,8 @@ ENV LC_ALL en_US.UTF-8
 
 COPY hbase-site.xml /etc/hadoop/hbase-site.xml
 
-WORKDIR /app
+WORKDIR /backend
 COPY shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar .
-COPY example.py .
+COPY /backend .
 
-CMD ["python3 example.py"]
+CMD ["python3 __main__.py"]
