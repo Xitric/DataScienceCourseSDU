@@ -61,13 +61,88 @@ services:
     networks:
       cscourse:
         ipv4_address: 172.200.0.5
+
+  region1: #Region1
+    image: xitric/datanode-regionserver:latest
+    container_name: region1
+    hostname: region1
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: hbase-region1
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo1:2181 zoo2:2181 zoo3:2181 hbase:16010"
+    env_file:
+      - ./hadoop.env
+      - ./hbase.env
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.20
+  region2: #Region2
+    image: xitric/datanode-regionserver:latest
+    container_name: region2
+    hostname: region2
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: hbase-region2
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo1:2181 zoo2:2181 zoo3:2181 hbase:16010"
+    env_file:
+      - ./hadoop.env
+      - ./hbase.env
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.21
+  region3: #Region3
+    image: xitric/datanode-regionserver:latest
+    container_name: region3
+    hostname: region3
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: hbase-region3
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo1:2181 zoo2:2181 zoo3:2181 hbase:16010"
+    env_file:
+      - ./hadoop.env
+      - ./hbase.env
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.22
+    
+  zoo1:
+    image: zookeeper:3.4.10
+    container_name: zoo1
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
+    volumes:
+      - zoo1_data:/data
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.10
+  zoo2:
+    image: zookeeper:3.4.10
+    container_name: zoo2
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
+    volumes:
+      - zoo2_data:/data
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.11
+  zoo3:
+    image: zookeeper:3.4.10
+    container_name: zoo3
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=0.0.0.0:2888:3888
+    volumes:
+      - zoo3_data:/data
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.12
   
   hbase:
-    image: bde2020/hbase-standalone:1.0.0-hbase1.2.6
+    # image: bde2020/hbase-standalone:1.0.0-hbase1.2.6
+    image: xitric/hbase-master:latest
     container_name: hbase
-    volumes:
-      - hbase_data:/hbase-data
-      - hbase_zookeeper_data:/zookeeper-data
+    # volumes:
+      # - hbase_data:/hbase-data
+      # - hbase_zookeeper_data:/zookeeper-data
     ports:
       - 16000:16000
       - 16010:16010
@@ -77,9 +152,9 @@ services:
       - 3888:3888
       - 2181:2181
     environment:
-      SERVICE_PRECONDITION: "namenode:9870 datanode1:9870 datanode2:9870 datanode3:9870"
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo1:2181 zoo2:2181 zoo3:2181"
     env_file:
-      - ./hbase-standalone.env
+      - ./hbase.env
     networks:
       cscourse:
         ipv4_address: 172.200.0.6
@@ -177,9 +252,15 @@ volumes:
     name: datanode3
   hadoop_historyserver:
     name: historyserver
-  hbase_data:
-    name: hbase
-  hbase_zookeeper_data:
-    name: hbase_zookeeper
+  zoo1_data:
+    name: zoo1_data
+  zoo2_data:
+    name: zoo2_data
+  zoo3_data:
+    name: zoo3_data
+  # hbase_data:
+  #   name: hbase
+  # hbase_zookeeper_data:
+  #   name: hbase_zookeeper
   mysql_data:
     name: mysql
