@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>    
 <!--
 /**
  *
- * Licensed to the Apache Software Foundation (ASF) under one
+ * Licensed to the Apache Software Foundation (ASF) under one  
  * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
+ * distributed with this work for additional information       
+ * regarding copyright ownership.  The ASF licenses this file  
  * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * "License"); you may not use this file except in compliance  
+ * with the License.  You may obtain a copy of the License at  
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -21,16 +21,9 @@
  */
 -->
 <configuration>
-<property><name>hbase.master.info.port</name><value>16010</value></property>
-<property><name>DIR</name><value>/etc/hbase</value></property>
-<property><name>hbase.cluster.distributed</name><value>false</value></property>
-<property><name>hbase.master.port</name><value>16000</value></property>
-<property><name>hbase.zookeeper.property.dataDir</name><value>/zookeeper-data</value></property>
+<property><name>hbase.cluster.distributed</name><value>true</value></property>
 <property><name>hbase.zookeeper.property.clientPort</name><value>2181</value></property>
-<property><name>hbase.zookeeper.leaderport</name><value>3888</value></property>
-<property><name>hbase.zookeeper.quorum</name><value>hbase</value></property>
-<property><name>hbase.regionserver.port</name><value>16020</value></property>
-<property><name>hbase.regionserver.info.port</name><value>16030</value></property>
-<property><name>hbase.zookeeper.peerport</name><value>2888</value></property>
-<property><name>hbase.rootdir</name><value>hdfs://namenode:9000/hbase</value></property>
+<property><name>hbase.zookeeper.quorum</name><value>zoo</value></property>
+<property><name>hbase.master</name><value>hbase:16000</value></property>
+<property><name>hbase.master.hostname</name><value>hbase</value></property>
 </configuration>
