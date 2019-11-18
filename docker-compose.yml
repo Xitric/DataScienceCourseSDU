@@ -63,25 +63,74 @@ services:
         ipv4_address: 172.200.0.5
   
   hbase:
-    image: xitric/hbase:latest
+    image: xitric/hbase-master:latest
     container_name: hbase
     ports:
       - 16000:16000
       - 16010:16010
-      - 16020:16020
-      - 16030:16030
       - 2888:2888
       - 3888:3888
-      - 2181:2181
-    volumes:
-      - hbase_zookeeper_data:/zookeeper-data
     environment:
-      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864"
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo:2181"
     env_file:
       - ./hbase.env
     networks:
       cscourse:
-        ipv4_address: 172.200.0.6
+        ipv4_address: 172.200.0.20
+  
+  zoo:
+    image: zookeeper:3.4.10
+    container_name: zoo
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888
+    volumes:
+      - zoo_data:/data
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.21
+  
+  region1:
+    image: xitric/hbase-region:latest
+    container_name: region1
+    hostname: region1
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: region1
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo:2181 hbase:16010"
+    env_file:
+      - ./hadoop.env
+      - ./hbase.env
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.22
+  
+  region2:
+    image: xitric/hbase-region:latest
+    container_name: region2
+    hostname: region2
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: region2
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo:2181 hbase:16010"
+    env_file:
+      - ./hadoop.env
+      - ./hbase.env
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.23
+  
+  region3:
+    image: xitric/hbase-region:latest
+    container_name: region3
+    hostname: region3
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: region3
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo:2181 hbase:16010"
+    env_file:
+      - ./hadoop.env
+      - ./hbase.env
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.24
   
   mysql:
     image: xitric/sfdb:latest
@@ -112,7 +161,7 @@ volumes:
     name: datanode2
   hadoop_datanode3:
     name: datanode3
-  hbase_zookeeper_data:
-    name: hbase_zookeeper
+  zoo_data:
+    name: zookeeper
   mysql_data:
     name: mysql

@@ -14,9 +14,9 @@ if __name__ == "__main__":
     sql = SQLContext(sc)
 
     # Create some data
-    df = sc.parallelize({Person("1", "Kasper", "24", "Sailing"),
-                         Person("2", "John", "15", "Drawing"),
-                         Person("3", "Catherine", "28", "Tennis")}).toDF()
+    df = sc.parallelize({Person("4", "Kasper", "24", "Sailing"),
+                         Person("5", "John", "15", "Drawing"),
+                         Person("6", "Catherine", "28", "Tennis")}).toDF()
 
     # Describes how to interpret the contents of the HBase table
     catalog = ''.join("""{
