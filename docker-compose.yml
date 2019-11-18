@@ -1,7 +1,7 @@
 version: "3.5"
 
 services:
-  namenode: #Master (metadata/chunk)
+  namenode:
     image: bde2020/hadoop-namenode:2.0.0-hadoop3.1.2-java8
     container_name: namenode
     ports:
@@ -17,7 +17,7 @@ services:
       cscourse:
         ipv4_address: 172.200.0.2
 
-  datanode1: #Slave1
+  datanode1:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
     container_name: datanode1
     ports:
@@ -32,117 +32,39 @@ services:
       cscourse:
         ipv4_address: 172.200.0.3
 
-  # datanode2: #Slave2
-  #   image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
-  #   container_name: datanode2
-  #   ports:
-  #     - 9865:9864
-  #   volumes:
-  #     - hadoop_datanode2:/hadoop/dfs/data
-  #   environment:
-  #     SERVICE_PRECONDITION: "namenode:9870"
-  #   env_file:
-  #     - ./hadoop.env
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.4
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
+    container_name: datanode2
+    ports:
+      - 9865:9864
+    volumes:
+      - hadoop_datanode2:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.4
 
-  # datanode3: #Slave3
-  #   image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
-  #   container_name: datanode3
-  #   ports:
-  #     - 9866:9864
-  #   volumes:
-  #     - hadoop_datanode3:/hadoop/dfs/data
-  #   environment:
-  #     SERVICE_PRECONDITION: "namenode:9870"
-  #   env_file:
-  #     - ./hadoop.env
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.5
-
-  # region1: #Region1
-  #   image: xitric/datanode-regionserver:latest
-  #   container_name: region1
-  #   hostname: region1
-  #   environment:
-  #     HBASE_CONF_hbase_regionserver_hostname: hbase-region1
-  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo1:2181 zoo2:2181 zoo3:2181 hbase:16010"
-  #   env_file:
-  #     - ./hadoop.env
-  #     - ./hbase.env
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.20
-  # region2: #Region2
-  #   image: xitric/datanode-regionserver:latest
-  #   container_name: region2
-  #   hostname: region2
-  #   environment:
-  #     HBASE_CONF_hbase_regionserver_hostname: hbase-region2
-  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo1:2181 zoo2:2181 zoo3:2181 hbase:16010"
-  #   env_file:
-  #     - ./hadoop.env
-  #     - ./hbase.env
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.21
-  # region3: #Region3
-  #   image: xitric/datanode-regionserver:latest
-  #   container_name: region3
-  #   hostname: region3
-  #   environment:
-  #     HBASE_CONF_hbase_regionserver_hostname: hbase-region3
-  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo1:2181 zoo2:2181 zoo3:2181 hbase:16010"
-  #   env_file:
-  #     - ./hadoop.env
-  #     - ./hbase.env
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.22
-    
-  # zoo1:
-  #   image: zookeeper:3.4.10
-  #   container_name: zoo1
-  #   environment:
-  #     ZOO_MY_ID: 1
-  #     ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
-  #   volumes:
-  #     - zoo1_data:/data
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.10
-  # zoo2:
-  #   image: zookeeper:3.4.10
-  #   container_name: zoo2
-  #   environment:
-  #     ZOO_MY_ID: 2
-  #     ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
-  #   volumes:
-  #     - zoo2_data:/data
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.11
-  # zoo3:
-  #   image: zookeeper:3.4.10
-  #   container_name: zoo3
-  #   environment:
-  #     ZOO_MY_ID: 3
-  #     ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=0.0.0.0:2888:3888
-  #   volumes:
-  #     - zoo3_data:/data
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.12
+  datanode3:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
+    container_name: datanode3
+    ports:
+      - 9866:9864
+    volumes:
+      - hadoop_datanode3:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.5
   
   hbase:
-    # image: bde2020/hbase-standalone:1.0.0-hbase1.2.6
     image: xitric/hbase:latest
     container_name: hbase
-    volumes:
-      - hbase_data:/hbase-data
-      - hbase_zookeeper_data:/zookeeper-data
     ports:
       - 16000:16000
       - 16010:16010
@@ -151,6 +73,8 @@ services:
       - 2888:2888
       - 3888:3888
       - 2181:2181
+    volumes:
+      - hbase_zookeeper_data:/zookeeper-data
     environment:
       SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864"
     env_file:
@@ -172,68 +96,6 @@ services:
       cscourse:
         ipv4_address: 172.200.0.7
 
-  # resourcemanager: #Yarn
-  #   image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.1.2-java8
-  #   container_name: resourcemanager
-  #   ports:
-  #     - 8088:8088
-  #   environment:
-  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864"
-  #   env_file:
-  #     - ./hadoop.env
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.6
-  # nodemanager: #Node Orchestrator (for containers)
-  #   image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.1.2-java8
-  #   container_name: nodemanager
-  #   ports:
-  #     - 8042:8042
-  #   environment:
-  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
-  #   env_file:
-  #     - ./hadoop.env
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.7
-  # historyserver: #Job Store
-  #   image: bde2020/hadoop-historyserver:2.0.0-hadoop3.1.2-java8
-  #   container_name: historyserver
-  #   ports:
-  #     - 8188:8188
-  #   environment:
-  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
-  #   volumes:
-  #     - hadoop_historyserver:/hadoop/yarn/timeline
-  #   env_file:
-  #     - ./hadoop.env
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.8
-  # spark-master:
-  #   image: bde2020/spark-master:2.4.4-hadoop2.7
-  #   container_name: spark-master
-  #   ports:
-  #     - "8080:8080"
-  #     - "7077:7077"
-  #   environment:
-  #     - INIT_DAEMON_STEP=setup_spark
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.9
-  # spark-worker-1:
-  #   image: bde2020/spark-worker:2.4.4-hadoop2.7
-  #   container_name: spark-worker-1
-  #   depends_on:
-  #     - spark-master
-  #   ports:
-  #     - "8081:8081"
-  #   environment:
-  #     - "SPARK_MASTER=spark://spark-master:7077"
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.10
-
 networks:
   cscourse:
     name: hadoop
@@ -250,16 +112,6 @@ volumes:
     name: datanode2
   hadoop_datanode3:
     name: datanode3
-  hadoop_historyserver:
-    name: historyserver
-  # zoo1_data:
-  #   name: zoo1_data
-  # zoo2_data:
-  #   name: zoo2_data
-  # zoo3_data:
-  #   name: zoo3_data
-  hbase_data:
-    name: hbase
   hbase_zookeeper_data:
     name: hbase_zookeeper
   mysql_data:

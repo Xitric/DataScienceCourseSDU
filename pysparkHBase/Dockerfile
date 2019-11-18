@@ -16,13 +16,9 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
 COPY hbase-site.xml /etc/hadoop/hbase-site.xml
-COPY core-site.xml /etc/hadoop/core-site.xml
 
 WORKDIR /backend
 COPY shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar .
 COPY /backend .
-
-ENV HADOOP_CONF_DIR=/etc/hadoop/
-ENV YARN_CONF_DIR=/etc/hadoop/
 
 CMD ["python3 __main__.py"]

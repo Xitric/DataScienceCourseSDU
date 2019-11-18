@@ -6,7 +6,7 @@ import os
 DATA_SOURCE_FORMAT = "org.apache.spark.sql.execution.datasources.hbase"
 
 if __name__ == "__main__":
-    os.environ['PYSPARK_SUBMIT_ARGS'] = "--master yarn --deploy-mode client --jars /backend/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar --files /etc/hadoop/core-site.xml,/etc/hadoop/hbase-site.xml pyspark-shell"
+    os.environ['PYSPARK_SUBMIT_ARGS'] = "--master yarn --jars /backend/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar pyspark-shell"
 
     # Run Spark locally
     spark_configuration = SparkConf().set("spark.driver.host", "localhost")
@@ -14,9 +14,9 @@ if __name__ == "__main__":
     sql = SQLContext(sc)
 
     # Create some data
-    df = sc.parallelize({Person("7", "Kasper", "24", "Sailing"),
-                         Person("8", "John", "15", "Drawing"),
-                         Person("9", "Catherine", "28", "Tennis")}).toDF()
+    df = sc.parallelize({Person("1", "Kasper", "24", "Sailing"),
+                         Person("2", "John", "15", "Drawing"),
+                         Person("3", "Catherine", "28", "Tennis")}).toDF()
 
     # Describes how to interpret the contents of the HBase table
     catalog = ''.join("""{
