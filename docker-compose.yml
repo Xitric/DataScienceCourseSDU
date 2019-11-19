@@ -86,6 +86,7 @@ services:
       ZOO_SERVERS: server.1=0.0.0.0:2888:3888
     volumes:
       - zoo_data:/data
+      - zoo_datalog:/datalog
     networks:
       cscourse:
         ipv4_address: 172.200.0.21
@@ -163,5 +164,7 @@ volumes:
     name: datanode3
   zoo_data:
     name: zookeeper
+  zoo_datalog:
+    name: zookeeper_log
   mysql_data:
     name: mysql
