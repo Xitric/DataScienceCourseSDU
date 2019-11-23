@@ -1,0 +1,1 @@
+docker run --rm --ip 172.200.0.8 --hostname pyspark --network hadoop --env-file hadoop.env pysparkapp:latest

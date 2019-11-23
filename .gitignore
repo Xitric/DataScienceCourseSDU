@@ -1,7 +1,6 @@
 data/
-
 .vscode/
+.idea/
+node_modules/
 
-pysparkHBase/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar
-
-pysparkHBase/backend/.idea/
+pysparkApp/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar
