@@ -31,7 +31,7 @@ if __name__ == "__main__":
     }""".split())
 
     # Store data in table
-    df.write.options(catalog=catalog, newtable=5).format(DATA_SOURCE_FORMAT).save()
+    df.write.options(catalog=catalog, newtable="5").format(DATA_SOURCE_FORMAT).save()
 
     # Read the table contents
     df = sql.read.options(catalog=catalog).format(DATA_SOURCE_FORMAT).load()

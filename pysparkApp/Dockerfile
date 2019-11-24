@@ -21,4 +21,4 @@ WORKDIR /backend
 COPY shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar .
 COPY /backend .
 
-CMD ["python3 __main__.py"]
+CMD ["python3 data_importer.py"]
