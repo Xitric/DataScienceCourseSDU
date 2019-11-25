@@ -8,6 +8,7 @@ from service_case_context import ServiceCaseContext
 DATA_SOURCE_FORMAT = "org.apache.spark.sql.execution.datasources.hbase"
 NEIGHBORHOODS = ["Seacliff", "Lake Street", "Presidio National Park", "Presidio Terrace", "Inner Richmond",
                  "Sutro Heights", "Lincoln Park / Ft. Miley", "Outer Richmond", "Golden Gate Park", "Presidio Heights",
+                 "Laurel Heights / Jordan Park", "Lone Mountain", "Anza Vista", "Cow Hollow", "Union Street", "Nob Hill",
                  "Laurel Heights / Jordan Park", "Lone Mountain", "Anza Vista", "Cow Hollow", "Union Street",
                  "Nob Hill",
                  "Marina", "Telegraph Hill", "Downtown / Union Square", "Tenderloin", "Civic Center", "Hayes Valley",
