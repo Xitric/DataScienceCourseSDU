@@ -5,6 +5,8 @@ LABEL Name=pysparkHBase Version=0.0.1
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -yq install python3 python3-pip locales
 RUN python3 -m pip install pyspark
+RUN python3 -m pip install shapely
+RUN python3 -m pip install pandas
 RUN apt-get autoremove -y
 RUN apt-get clean
 RUN cp /usr/bin/python3 /usr/bin/python
@@ -21,4 +23,4 @@ WORKDIR /backend
 COPY shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar .
 COPY /backend .
 
-CMD ["python3 data_importer.py"]
+CMD ["python3 incident_modern_importer.py"]
