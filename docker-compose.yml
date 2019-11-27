@@ -4,6 +4,7 @@ services:
   namenode:
     image: bde2020/hadoop-namenode:2.0.0-hadoop3.1.2-java8
     container_name: namenode
+    restart: on-failure
     ports:
       - 9870:9870
       - 9000:9000
@@ -20,6 +21,7 @@ services:
   datanode1:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
     container_name: datanode1
+    restart: on-failure
     ports:
       - 9864:9864
     volumes:
@@ -35,6 +37,7 @@ services:
   datanode2:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
     container_name: datanode2
+    restart: on-failure
     ports:
       - 9865:9864
     volumes:
@@ -50,6 +53,7 @@ services:
   datanode3:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
     container_name: datanode3
+    restart: on-failure
     ports:
       - 9866:9864
     volumes:
@@ -65,6 +69,7 @@ services:
   hbase:
     image: xitric/hbase-master:latest
     container_name: hbase
+    restart: on-failure
     ports:
       - 16000:16000
       - 16010:16010
@@ -81,6 +86,7 @@ services:
   zoo:
     image: zookeeper:3.4.10
     container_name: zoo
+    restart: on-failure
     environment:
       ZOO_MY_ID: 1
       ZOO_SERVERS: server.1=0.0.0.0:2888:3888
@@ -95,6 +101,7 @@ services:
     image: xitric/hbase-region:latest
     container_name: region1
     hostname: region1
+    restart: on-failure
     environment:
       HBASE_CONF_hbase_regionserver_hostname: region1
       SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo:2181 hbase:16010"
@@ -109,6 +116,7 @@ services:
     image: xitric/hbase-region:latest
     container_name: region2
     hostname: region2
+    restart: on-failure
     environment:
       HBASE_CONF_hbase_regionserver_hostname: region2
       SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo:2181 hbase:16010"
@@ -123,6 +131,7 @@ services:
     image: xitric/hbase-region:latest
     container_name: region3
     hostname: region3
+    restart: on-failure
     environment:
       HBASE_CONF_hbase_regionserver_hostname: region3
       SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 zoo:2181 hbase:16010"
@@ -136,6 +145,7 @@ services:
   mysql:
     image: xitric/sfdb:latest
     container_name: mysql
+    restart: on-failure
     environment:
       MYSQL_ROOT_PASSWORD: password
     volumes:
