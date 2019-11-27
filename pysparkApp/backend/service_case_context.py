@@ -1,6 +1,7 @@
 import os
 
 from context import Context
+from string_hasher import string_hash
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import udf, length, unix_timestamp, to_timestamp
 from pyspark.sql.types import IntegerType, DoubleType
@@ -66,11 +67,11 @@ class ServiceCaseContext(Context):
 
         # User defined function for calculating category and neighborhood numbers
         category_id = udf(
-            lambda category_str: hash(category_str),  # Conversion function
+            lambda category_str: string_hash(category_str),  # Conversion function
             IntegerType()  # Return type
         )
         neighborhood_id = udf(
-            lambda neighborhood_str: hash(neighborhood_str),
+            lambda neighborhood_str: string_hash(neighborhood_str),
             IntegerType()
         )
 
