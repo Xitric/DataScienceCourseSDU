@@ -58,62 +58,15 @@ if __name__ == "__main__":
         incident_modern_df["Incident Category"].isNotNull() & incident_modern_df["Analysis Neighborhood"].isNotNull())
 
 
-    class Student(object):
-        name = ""
-        age = 0
-        major = ""
-
-        # The class "constructor" - It's actually an initializer
-        def __init__(self, name, age, major):
-            self.name = name
-            self.age = age
-            self.major = major
-
-    def make_student(name, age, major):
-        student = Student(name, age, major)
-        return student
-
-
-
-
-
-
-
-    def check_neighborhood(neighborhood, latitude, longitude):
-        if neighborhood in NEIGHBORHOODS:
-            print("Found in file")
-            return neighborhood
-        else:
-            print("Not found in file")
-            print(str(latitude) + " " + str(longitude))
-            point = Point(float(latitude), float(longitude))
-            for name, polygon in name_to_multipolygon:
-                if polygon.contains(point):
-                    return name
-            return len(name_to_multipolygon) == 0 if "Error" else "Not found"
-
-    analysis_neighborhood = udf(
-        check_neighborhood, StringType()
-    )
-
-
-    name_to_multipolygon = {}
-
-    def create_polygon(multipolygon_string, neighborhood):
+    def create_polygon(multipolygon_string):
         multipolygon_clean = multipolygon_string[16:-3]
         points_with_spaces = multipolygon_clean.split(", ")
         points = []
         for point in points_with_spaces:
             coordinates = point.split(" ")
             points.append(Point(float(coordinates[1]), float(coordinates[0])))
-       # polygon = Polygon([[p.x, p.y] for p in points])
-
-
-        p = Point(37.76877049785351, -122.4274620588060)
-       # print("create_polygon: " + str(polygon.contains(p)))
-      #  name_to_multipolygon[neighborhood] = polygon
-       # return multipolygon_string[16:-3]
         return [[p.x, p.y] for p in points]
+
 
     multipolygon = udf(
         create_polygon, ArrayType(ArrayType(FloatType()))
@@ -124,35 +77,17 @@ if __name__ == "__main__":
     sf_boundaries_df = sf_boundaries_df.select("the_geom", "name")
     sf_boundaries_df = sf_boundaries_df.withColumn("the_geom", multipolygon(
         sf_boundaries_df["the_geom"],
-        sf_boundaries_df["name"]
     ))
 
     check_neighborhood_in_polygon = udf(
         lambda latitude, longitude, polygon: Polygon(polygon).contains(Point(float(latitude), float(longitude))),
         BooleanType()
     )
-    incident_modern_df = incident_modern_df.crossJoin(sf_boundaries_df).where(
-        check_neighborhood_in_polygon("Latitude", "Longitude", "the_geom")
-    ).select("name")
+
+    incident_modern_df = incident_modern_df.join(
+        sf_boundaries_df,
+        check_neighborhood_in_polygon("Latitude", "Longitude", "the_geom"),
+        "cross"
+    ).select("name", "latitude", "longitude")
 
     incident_modern_df.show(200, True)
-
-
-    # incident_modern_df = incident_modern_df.withColumn("n", analysis_neighborhood(
-    #     incident_modern_df["Analysis Neighborhood"],
-    #     incident_modern_df["Latitude"],
-    #     incident_modern_df["Longitude"]
-    # ))
-    # incident_modern_df.show(10, False)
-
-    #UDF for hver række i incident df, send neighborhood, latitude, lontidide, sf_boundaries
-    #hvis neighborhood ikke er i NEIGHBORHOOD så tjek om latitude og longitiude er i polygon i sf_boundaries og returner navnet
-
-    # cross join:
-    # hver incident report sammenlignes med sf_boundaries
-    # Where: incident latitude og longitude om de er i polygonen (hvis der er sandt beholdes rækken)
-    # lav et selecte efter, til at eksk
-
-
-    #polygon = Polygon([(0, 0), (0, 1), (1, 1), (1, 0)])
-    #print("Is point in polygon:" + str(polygon.contains(point)))
