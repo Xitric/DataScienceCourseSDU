@@ -1,8 +1,6 @@
-import os
-
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import to_timestamp, unix_timestamp, udf, length
-from pyspark.sql.types import IntegerType, DoubleType
+from pyspark.sql.functions import count, lit
+
 from service_case_context import ServiceCaseContext
 
 DATA_SOURCE_FORMAT = "org.apache.spark.sql.execution.datasources.hbase"
@@ -79,9 +77,28 @@ if __name__ == "__main__":
         .getOrCreate()
 
     context = ServiceCaseContext(spark)
-    df = context.load_csv() \
-        .limit(150000)  # For testing purposes
+    # df = context.load_csv() \
+    #     .limit(150000)  # For testing purposes
 
-    context.save_hbase(df)
+    # context.save_hbase(df)
     load_df = context.load_hbase()
-    print(load_df.count())
+
+    # schema = load_df.schema
+
+    # @pandas_udf(schema, functionType=PandasUDFType.GROUPED_MAP)
+    # def count_graffiti(df: pandas.DataFrame):
+    #     neighborhood = df["neighborhood_id"].iloc[0]
+    #     count = df.where((df["category_id"] == CATEGORIES.index("Graffiti"))).count()
+    #     return pandas.DataFrame([neighborhood] + [count])
+
+    # load_df.show(100, False)
+    load_df.where((load_df["category_id"] == (hash(CATEGORIES[0]) & 0xffffffff))) \
+        .groupBy(load_df["neighborhood_id"]) \
+        .agg(count(lit(1)).alias("sidewalk_cleaning")) \
+        .show(200, False)
+
+    # load_df.where((load_df["neighborhood_id"] < 5) & (load_df["category_id"] == CATEGORIES.index("Graffiti"))) \
+    #     .groupBy(load_df["neighborhood_id"]) \
+    #     .apply(count_graffiti) \
+    #     .show(10, False)
+    # print(load_df.count())
