@@ -1,4 +1,4 @@
-let vegaLite = require(vega-lite)
+let vegaLite = require('vega-lite');
 
 let express = require('express');
 let router = express.Router();
