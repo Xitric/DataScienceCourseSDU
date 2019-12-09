@@ -16,9 +16,11 @@ var vlSpec = {
     "layer": [
         {
         "data": {
-            "url": "https://data.sfgov.org/resource/6ia5-2f8k.geojson",
+            //"url": "https://data.sfgov.org/resource/6ia5-2f8k.geojson",
+            "url": "dataset/SFFind_neighborhoods.topojson",
             "format": {
-                "type": "topojson"
+                "type": "topojson",
+                "feature": "SFFind_neighborhoods"
             }
         },
         "mark": {
