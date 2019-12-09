@@ -6,8 +6,8 @@ let locationPoints = [
 
 var vlSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
-    "width": 500,
-    "height": 500,
+    "width": 720,
+    "height": 720,
     "config": {
         "view": {
         "stroke": "transparent"
@@ -16,8 +16,7 @@ var vlSpec = {
     "layer": [
         {
         "data": {
-            //"url": "https://data.sfgov.org/resource/6ia5-2f8k.geojson",
-            "url": "dataset/SFFind_neighborhoods.topojson",
+            "url": "../dataset/SFFind_neighborhoods.topojson",
             "format": {
                 "type": "topojson",
                 "feature": "SFFind_neighborhoods"

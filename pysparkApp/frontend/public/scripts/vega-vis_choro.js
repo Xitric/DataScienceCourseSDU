@@ -1,26 +1,26 @@
 var vlSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
-  "width": 500,
-  "height": 300,
+  "width": 720,
+  "height": 720,
   "data": {
-    "url": "dataset/SFFind_neighborhoods.topojson",
+    "url": "../dataset/SFFind_neighborhoods.topojson",
     "format": {
       "type": "topojson",
       "feature": "SFFind_neighborhoods"
     }
   },
   "transform": [{
-    "calculate": "datum.name", "as": "name"
-  }],
-  "transform": [{
+          "calculate": "datum.properties.name", "as": "name"
+        },
+        {
     "lookup": "name",
     "from": {
-        "data": {
-          "url": "dataset/rate.csv"
-        },
-        "key": "name",
-        "fields": ["rate"]
-      }
+      "data": {
+        "url": "../dataset/rate.csv"
+      },
+      "key": "name",
+      "fields": ["rate"]
+    }
   }],
   "projection": {
     "type": "albersUsa"
