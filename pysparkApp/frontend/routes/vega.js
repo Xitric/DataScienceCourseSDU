@@ -8,8 +8,8 @@ router.get('/', function(req, res, next) {
   res.render('vega', { title: 'Vega Visualization', layout:'layout-vega' });
 });
 
-router.get('/chloro', function(req, res, next) {
-  res.render('vega_chloro', { title: 'Vega Visualization', layout:'layout-vega' });
+router.get('/choro', function(req, res, next) {
+  res.render('vega_choro', { title: 'Choropleth Visualization', layout:'layout-vega' });
 });
 
 module.exports = router;

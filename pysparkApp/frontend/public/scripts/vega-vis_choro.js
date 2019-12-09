@@ -22,15 +22,13 @@ var vlSpec = {
       "fields": ["rate"]
     }
   }],
-  "projection": {
-    "type": "albersUsa"
-  },
   "mark": "geoshape",
   "encoding": {
-    "color": {
-      "field": "rate",
-      "type": "quantitative"
-    }
+    "color": {"field": "rate", "type": "quantitative"},
+    "tooltip": [
+      {"title": "Neighborhood" ,"field": "name", "type": "nominal"},
+      {"title": "Rate" ,"field": "rate", "type": "quantitative"}
+      ]
   }
   };
 
