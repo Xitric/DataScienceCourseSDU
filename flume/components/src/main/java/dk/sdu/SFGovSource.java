@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 public class SFGovSource extends AbstractSource implements EventDrivenSource, Configurable {
 
 	private static final Logger logger = LoggerFactory.getLogger(ExecSource.class);
+	private static final int RETRY_COUNT = 10;
 
 	//Config
 	private int batchSize;
@@ -93,7 +94,7 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 
 		executor.scheduleAtFixedRate(new SFGovSourceRunner(batchSize, appToken, getChannelProcessor()),
 				0,
-				20,
+				60,
 				TimeUnit.SECONDS);
 		logger.info("SFGovSource scheduled for running");
 
@@ -138,46 +139,56 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 
 		@Override
 		public void run() {
-			//TODO: Read latest from DB
-			latestTime = hdfsClient.getLatestTime();
+			latestTime = retryGetLatest();
 			if (latestTime == null) {
 				logger.info("Error reading latest service case time from MySql, no data will be fetched");
-				if (hdfsClient.isLatestEntryMissing()) {
-					logger.info("Entry with latest service case time is missing in MySql");
-//					hdfsClient.saveLatestTime(LocalDateTime.now());
-				}
 				return;
 			}
 
 			logger.info("SFGovSource started");
-			//TODO: Iterate until no more data, do-while?
-			JsonArray results = getSince(latestTime);
 
-			for (JsonElement result : results) {
-				updateLatest(result.getAsJsonObject());
-				bufferedEvents.add(EventBuilder.withBody(result.toString(), Charset.defaultCharset()));
-				if (bufferedEvents.size() >= batchSize) {
-					processBatch();
+			JsonArray results;
+			while ((results = getSince(latestTime)).size() > 0) {
+				for (JsonElement result : results) {
+					updateLatest(result.getAsJsonObject());
+					bufferedEvents.add(EventBuilder.withBody(result.toString(), Charset.defaultCharset()));
+					if (bufferedEvents.size() >= batchSize) {
+						processBatch();
+					}
 				}
 			}
-			//			for (int i = 0; i < 10; i++) {
-			//				bufferedEvents.add(EventBuilder.withBody("{\"incident_datetime\":\"2019-08-15T11:41:00.000\",\"incident_date\":\"2019-08-15T00:00:00.000\",\"incident_time\":\"11:41\",\"incident_year\":\"2019\",\"incident_day_of_week\":\"Thursday\",\"report_datetime\":\"2019-10-01T14:06:00.000\",\"row_id\":\"85424006374\",\"incident_id\":\"854240\",\"incident_number\":\"196208089\",\"report_type_code\":\"II\",\"report_type_description\":\"Coplogic Initial\",\"filed_online\": true,\"incident_code\":\"06374\",\"incident_category\":\"Larceny Theft\",\"incident_subcategory\":\"Larceny Theft - Other\",\"incident_description\":\"Theft, Other Property, >$950\",\"resolution\":\"Open or Active\",\"police_district\":\"Central\"}", Charset.defaultCharset()));
-			//				if (bufferedEvents.size() >= batchSize) {
-			//					processBatch();
-			//				}mo
-			//			}
 
 			if (!bufferedEvents.isEmpty()) {
 				processBatch();
 			}
 
-			//TODO: Persist latest in DB
+			logger.info("SFGovSource done reading new data");
+		}
+
+		private LocalDateTime retryGetLatest() {
+			int retries = RETRY_COUNT;
+			LocalDateTime latest;
+			while ((latest = hdfsClient.getLatestTime()) == null) {
+				if (hdfsClient.isLatestEntryMissing()) {
+					logger.info("Entry with latest service case time is missing in MySql");
+					break;
+				}
+
+				retries --;
+				if (retries == 0) {
+					logger.info("Failed to connect to MySql in " + RETRY_COUNT + " attempts");
+					break;
+				}
+			}
+
+			return latest;
 		}
 
 		private JsonArray getSince(LocalDateTime last) {
 			try {
 				URI uri = new URIBuilder("https://data.sfgov.org/resource/vw6y-z8j6.json") //TODO: Inject uri
-						.setParameter("$limit", "10")
+						.setParameter("$limit", "10") //TODO: Remove when done testing
+						.setParameter("$where", "requested_datetime>'" + last.toString() + "'")
 						.build();
 				HttpGet request = new HttpGet(uri);
 				request.addHeader("X-App-Token", appToken);
