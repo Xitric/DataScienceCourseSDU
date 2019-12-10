@@ -31,6 +31,7 @@ RUN chmod +x /run.sh
 
 WORKDIR /opt/flume-$FLUME_VERSION
 COPY components/target/sfgov-flume-components-1.0.0.jar plugins.d/sfgov/lib/sfgov-flume-components-1.0.0.jar
+COPY components/lib/mysql-connector-java-8.0.18.jar plugins.d/mysql/lib/mysql-connector-java-8.0.18.jar
 ADD flume.conf conf/
 
 ENTRYPOINT ["/run.sh"]
