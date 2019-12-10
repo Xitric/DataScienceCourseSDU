@@ -1,6 +1,8 @@
 package dk.sdu;
 
 /**
+ * Flume configuration constants.
+ *
  * @author Kasper
  */
 public interface SFGovSourceConfigurationConstants {
@@ -13,6 +15,8 @@ public interface SFGovSourceConfigurationConstants {
 	int DEFAULT_SCHEDULED_HOUR = 0;
 	String CONFIG_SCHEDULED_RECURRENCE = "scheduledRecurrence";
 	int DEFAULT_SCHEDULED_RECURRENCE = 24;
-	String CONFIG_APP_TOKEN = "appToken";
-	String DEFAULT_APP_TOKEN = "";
+	String CONFIG_DATA_SOURCE = "dataSource";
+	String DEFAULT_DATA_SOURCE = "";
+	String CONFIG_TIME_FIELD = "timeField";
+	String DEFAULT_TIME_FIELD = "";
 }

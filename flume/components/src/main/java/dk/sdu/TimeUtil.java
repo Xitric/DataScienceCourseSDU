@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
+ * Utility for parsing time strings.
+ *
  * @author Kasper
  */
 public class TimeUtil {

@@ -3,7 +3,6 @@ package dk.sdu;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.EventDrivenSource;
@@ -11,19 +10,9 @@ import org.apache.flume.channel.ChannelProcessor;
 import org.apache.flume.conf.Configurable;
 import org.apache.flume.event.EventBuilder;
 import org.apache.flume.source.AbstractSource;
-import org.apache.flume.source.ExecSource;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -43,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class SFGovSource extends AbstractSource implements EventDrivenSource, Configurable {
 
-	private static final Logger logger = LoggerFactory.getLogger(ExecSource.class);
+	private static final Logger logger = LoggerFactory.getLogger(SFGovSource.class);
 	private static final int RETRY_COUNT = 10;
 
 	//Config
@@ -51,7 +40,8 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 	private ZoneId scheduledTimeZone;
 	private int scheduledHour;
 	private int scheduledRecurrence;
-	private String appToken;
+	private String dataSource;
+	private String timeField;
 
 	//Runner
 	private ScheduledExecutorService executor;
@@ -71,8 +61,11 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 		scheduledRecurrence = context.getInteger(SFGovSourceConfigurationConstants.CONFIG_SCHEDULED_RECURRENCE,
 				SFGovSourceConfigurationConstants.DEFAULT_SCHEDULED_RECURRENCE);
 
-		appToken = context.getString(SFGovSourceConfigurationConstants.CONFIG_APP_TOKEN,
-				SFGovSourceConfigurationConstants.DEFAULT_APP_TOKEN);
+		dataSource = context.getString(SFGovSourceConfigurationConstants.CONFIG_DATA_SOURCE,
+				SFGovSourceConfigurationConstants.DEFAULT_DATA_SOURCE);
+
+		timeField = context.getString(SFGovSourceConfigurationConstants.CONFIG_TIME_FIELD,
+				SFGovSourceConfigurationConstants.DEFAULT_TIME_FIELD);
 	}
 
 	@Override
@@ -92,7 +85,7 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 		//				TimeUnit.HOURS.toSeconds(scheduledRecurrence),
 		//				TimeUnit.SECONDS);
 
-		executor.scheduleAtFixedRate(new SFGovSourceRunner(batchSize, appToken, getChannelProcessor()),
+		executor.scheduleAtFixedRate(new SFGovSourceRunner(batchSize, dataSource, timeField, getChannelProcessor()),
 				0,
 				60,
 				TimeUnit.SECONDS);
@@ -121,20 +114,20 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 	private static final class SFGovSourceRunner implements Runnable {
 
 		private final int batchSize;
-		private final String appToken;
+		private final String timeField;
 		private final ChannelProcessor channelProcessor;
 		private final List<Event> bufferedEvents;
-		private final CloseableHttpClient httpClient;
+		private final MySqlClient mysqlClient;
+		private final SfGovClient httpClient;
 		private LocalDateTime latestTime;
-		private MySqlClient hdfsClient;
 
-		public SFGovSourceRunner(int batchSize, String appToken, ChannelProcessor channelProcessor) {
+		public SFGovSourceRunner(int batchSize, String dataSource, String timeField, ChannelProcessor channelProcessor) {
 			this.batchSize = batchSize;
-			this.appToken = appToken;
+			this.timeField = timeField;
 			this.channelProcessor = channelProcessor;
 			this.bufferedEvents = new ArrayList<>();
-			this.httpClient = HttpClients.createDefault();
-			this.hdfsClient = new MySqlClient();
+			this.mysqlClient = new MySqlClient(dataSource);
+			this.httpClient = new SfGovClient(dataSource, timeField);
 		}
 
 		@Override
@@ -148,7 +141,7 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 			logger.info("SFGovSource started");
 
 			JsonArray results;
-			while ((results = getSince(latestTime)).size() > 0) {
+			while ((results = httpClient.getSince(latestTime)).size() > 0) {
 				for (JsonElement result : results) {
 					updateLatest(result.getAsJsonObject());
 					bufferedEvents.add(EventBuilder.withBody(result.toString(), Charset.defaultCharset()));
@@ -168,13 +161,13 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 		private LocalDateTime retryGetLatest() {
 			int retries = RETRY_COUNT;
 			LocalDateTime latest;
-			while ((latest = hdfsClient.getLatestTime()) == null) {
-				if (hdfsClient.isLatestEntryMissing()) {
+			while ((latest = mysqlClient.getLatestTime()) == null) {
+				if (mysqlClient.isLatestEntryMissing()) {
 					logger.info("Entry with latest service case time is missing in MySql");
 					break;
 				}
 
-				retries --;
+				retries--;
 				if (retries == 0) {
 					logger.info("Failed to connect to MySql in " + RETRY_COUNT + " attempts");
 					break;
@@ -184,33 +177,8 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 			return latest;
 		}
 
-		private JsonArray getSince(LocalDateTime last) {
-			try {
-				URI uri = new URIBuilder("https://data.sfgov.org/resource/vw6y-z8j6.json") //TODO: Inject uri
-						.setParameter("$limit", "10") //TODO: Remove when done testing
-						.setParameter("$where", "requested_datetime>'" + last.toString() + "'")
-						.build();
-				HttpGet request = new HttpGet(uri);
-				request.addHeader("X-App-Token", appToken);
-
-				try (CloseableHttpResponse response = httpClient.execute(request)) {
-					if (response.getStatusLine().getStatusCode() == 200) {
-						JsonElement responseBody = new JsonParser().parse(EntityUtils.toString(response.getEntity()));
-
-						if (responseBody.isJsonArray()) {
-							return responseBody.getAsJsonArray();
-						}
-					}
-				}
-			} catch (URISyntaxException | IOException e) {
-				e.printStackTrace();
-			}
-
-			return new JsonArray();
-		}
-
 		private void updateLatest(JsonObject potentialLatest) {
-			String openedString = potentialLatest.getAsJsonPrimitive("requested_datetime").getAsString();
+			String openedString = potentialLatest.getAsJsonPrimitive(timeField).getAsString();
 			LocalDateTime openedTime = TimeUtil.toDateTime(openedString);
 
 			if (openedTime.isAfter(latestTime)) {
