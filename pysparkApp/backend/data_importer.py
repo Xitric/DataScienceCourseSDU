@@ -1,7 +1,12 @@
+import findspark
+from geo_pyspark.utils import GeoSparkKryoRegistrator, KryoSerializer
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import count, lit
 
-from service_case_context import ServiceCaseContext
+from geo_pyspark.register import upload_jars
+from geo_pyspark.register import GeoSparkRegistrator
+
+from incident_modern_context import IncidentModernContext
 
 DATA_SOURCE_FORMAT = "org.apache.spark.sql.execution.datasources.hbase"
 NEIGHBORHOODS = ["Seacliff", "Lake Street", "Presidio National Park", "Presidio Terrace", "Inner Richmond",
@@ -66,6 +71,8 @@ CATEGORIES = ["Street and Sidewalk Cleaning", "Graffiti", "Abandoned Vehicle", "
 
 if __name__ == "__main__":
     # SparkContext is old tech! Therefore we use the modern SparkSession
+    upload_jars()
+
     spark = SparkSession.builder \
         .master("local") \
         .config('spark.driver.host', '127.0.0.1') \
@@ -76,12 +83,22 @@ if __name__ == "__main__":
         .appName("SfDataImporter") \
         .getOrCreate()
 
-    context = ServiceCaseContext(spark)
+    # .config("spark.serializer", KryoSerializer.getName) \
+    # .config("spark.kryo.registrator", GeoSparkKryoRegistrator.getName) \
+
+   # GeoSparkRegistrator.registerAll(spark)
+
+   # GeoSparkRegistrator.register(SparkSession.builder.getOrCreate())
+
+
+
+    #context = ServiceCaseContext(spark)
     # df = context.load_csv() \
     #     .limit(150000)  # For testing purposes
 
     # context.save_hbase(df)
-    load_df = context.load_hbase()
+    #load_df = context.load_hbase()
+
 
     # schema = load_df.schema
 
@@ -92,13 +109,17 @@ if __name__ == "__main__":
     #     return pandas.DataFrame([neighborhood] + [count])
 
     # load_df.show(100, False)
-    load_df.where((load_df["category_id"] == (hash(CATEGORIES[0]) & 0xffffffff))) \
-        .groupBy(load_df["neighborhood_id"]) \
-        .agg(count(lit(1)).alias("sidewalk_cleaning")) \
-        .show(200, False)
+    # load_df.where((load_df["category_id"] == (hash(CATEGORIES[0]) & 0xffffffff))) \
+    #     .groupBy(load_df["neighborhood_id"]) \
+    #     .agg(count(lit(1)).alias("sidewalk_cleaning")) \
+    #     .show(200, False)
 
     # load_df.where((load_df["neighborhood_id"] < 5) & (load_df["category_id"] == CATEGORIES.index("Graffiti"))) \
     #     .groupBy(load_df["neighborhood_id"]) \
     #     .apply(count_graffiti) \
     #     .show(10, False)
     # print(load_df.count())
+
+    context = IncidentModernContext(spark)
+    context.load_csv()#.show(200, true)
+

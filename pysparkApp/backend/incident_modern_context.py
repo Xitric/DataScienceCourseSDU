@@ -5,9 +5,9 @@ from pyspark.sql.functions import udf, unix_timestamp, to_timestamp
 from pyspark.sql.types import BooleanType, ArrayType, FloatType, DoubleType
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
+from geo_pyspark.register import GeoSparkRegistrator
 
 from context import Context
-
 
 class IncidentModernContext(Context):
     # File from HDFS
@@ -51,16 +51,20 @@ class IncidentModernContext(Context):
             for point in points_with_spaces:
                 coordinates = point.split(" ")
                 points.append(Point(float(coordinates[1]), float(coordinates[0])))
+                self.spark.createDataFrame(Polygon([[p.x, p.y] for p in points])).show(10,True)
             return [[p.x, p.y] for p in points]
 
         multipolygon = udf(
             create_polygon, ArrayType(ArrayType(FloatType()))
         )
 
+       # GeoSparkRegistrator.registerAll(self.spark)
+
+
         # Check if the latitude and longitude is in the neighborhood represented as a Polygon
         check_neighborhood_in_polygon = udf(
             lambda latitude, longitude, neighborhood_boundary:
-            Polygon(neighborhood_boundary).contains(Point(float(latitude), float(longitude))),
+            neighborhood_boundary.contains(Point(float(latitude), float(longitude))),
             BooleanType()
         )
 
@@ -72,7 +76,7 @@ class IncidentModernContext(Context):
             sf_boundaries_df["the_geom"].alias("polygon"),
             sf_boundaries_df["name"].alias("analysis_neighborhood")
         )
-        sf_boundaries_df.show(200, True)
+        sf_boundaries_df.show(10, True)
 
         incidents_modern_df = incidents_modern_df.select(
             unix_timestamp(to_timestamp("Incident Datetime", "yyyy/MM/dd hh:mm:ss a")).alias("incident_datetime"),
@@ -98,7 +102,7 @@ class IncidentModernContext(Context):
             "cross"
         )
 
-        incidents_modern_df.show(200, True)
+        incidents_modern_df.show(10, True)
         return incidents_modern_df
 
 
