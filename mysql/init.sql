@@ -13,12 +13,14 @@ GRANT SELECT ON *.* TO 'client'@'%';
 
 FLUSH PRIVILEGES;
 
--- Set up database for analysis results
+-- Create databases
 CREATE DATABASE analysis_results;
+CREATE DATABASE flume;
+
+-- Set up database for analysis results
 USE analysis_results;
 
 -- Set up database for flume
-CREATE DATABASE flume;
 USE flume;
 create table data_ingestion_latest
 (

@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class MySqlClient {
 
 	private final String user = System.getenv("SFGOV_MYSQL_USER");
-	private final String password = System.getenv("SFGOV_MYSQL_PASSWORD");
+	private final String password = System.getenv("SFGOV_MYSQL_CLIENT_PASSWORD");
 	private final String server = System.getenv("SFGOV_MYSQL_SERVER");
 	private final String dataSource;
 
