@@ -19,7 +19,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +36,7 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 
 	private static final Logger logger = LoggerFactory.getLogger(SFGovSource.class);
 	private static final int RETRY_COUNT = 10;
+	private static final String DATA_SOURCE_HEADER = "Data-Source";
 
 	//Config
 	private int batchSize;
@@ -117,6 +120,7 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 		private final String timeField;
 		private final ChannelProcessor channelProcessor;
 		private final List<Event> bufferedEvents;
+		private final Map<String, String> headers;
 		private final MySqlClient mysqlClient;
 		private final SfGovClient httpClient;
 		private LocalDateTime latestTime;
@@ -125,7 +129,11 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 			this.batchSize = batchSize;
 			this.timeField = timeField;
 			this.channelProcessor = channelProcessor;
+
 			this.bufferedEvents = new ArrayList<>();
+			this.headers = new HashMap<>();
+			this.headers.put(DATA_SOURCE_HEADER, dataSource);
+
 			this.mysqlClient = new MySqlClient(dataSource);
 			this.httpClient = new SfGovClient(dataSource, timeField);
 		}
@@ -144,7 +152,7 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 			while ((results = httpClient.getSince(latestTime)).size() > 0) {
 				for (JsonElement result : results) {
 					updateLatest(result.getAsJsonObject());
-					bufferedEvents.add(EventBuilder.withBody(result.toString(), Charset.defaultCharset()));
+					bufferedEvents.add(EventBuilder.withBody(result.toString(), Charset.defaultCharset(), headers));
 					if (bufferedEvents.size() >= batchSize) {
 						processBatch();
 					}
