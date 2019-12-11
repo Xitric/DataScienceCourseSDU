@@ -13,11 +13,31 @@ a {
     color: #000000;
 }
 
-#navbar {
+.navBar {
     background-color: #510265;
     color: #ffffff;
     padding: 0 16px;
-    overflow: hidden;
+    display: flex;
+    flex-flow: row;
+}
+
+.navLinks {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+.navButton {
+    color: white;
+    text-decoration: none;
+    padding: 0 16px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.navButton:hover {
+    background-color: #3f0253;
 }
 
 .category {
