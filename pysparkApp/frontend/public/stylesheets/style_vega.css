@@ -1,0 +1,74 @@
+.vega-actions a {
+    margin-right: 5px;
+}
+
+.container {
+    display: flex;
+    /* Has to be like this for the dropdown menu to be on top */
+    flex-direction: row-reverse;
+}
+
+#vis {
+    flex-grow: 1;
+}
+
+#vis canvas {
+    margin: auto;
+    display: block;
+}
+
+.dropbutton { 
+    background-color: #4CAF50; 
+    color: white; 
+    padding: 14px; 
+    font-size: 14px; 
+    border: none; 
+    cursor: pointer; 
+} 
+  
+.dropbutton:hover, .dropbutton:focus { 
+    background-color: #3e8e41; 
+} 
+  
+.dropdownmenu { 
+    position: relative; 
+    display: inline-block; 
+    outline: none;
+
+    width: 250;
+} 
+  
+.dropdownmenu-content { 
+    display: none; 
+    position: absolute; 
+    background-color: #f9f9f9; 
+    min-width: 250px; 
+    overflow: auto; 
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.3);
+    
+    border: 2px solid #ccc;
+    width: 180px;
+    height: 500px;
+    overflow-y: scroll;
+
+    flex-direction: column;
+} 
+  
+.dropdownmenu-content input { 
+    color: black; 
+    padding: 12px 14px; 
+    text-decoration: none; 
+    /* display: block; */ 
+} 
+  
+.dropdownmenu input:hover { 
+    background-color: #f1f1f1 
+} 
+  
+.show { 
+    display:block; 
+}
+
+.innerContainer {
+    flex-direction: row;
+}
