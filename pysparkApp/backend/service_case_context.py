@@ -2,16 +2,37 @@ import os
 
 from context import Context
 from string_hasher import string_hash
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import SparkSession, DataFrame, Row
 from pyspark.sql.functions import udf, length, unix_timestamp, to_timestamp
 from pyspark.sql.types import IntegerType, DoubleType
+from pyspark.streaming import StreamingContext, DStream
+from pyspark.streaming.flume import FlumeUtils
+from pyspark import RDD
+import json
+
+# User defined function for calculating category and neighborhood numbers
+category_id = udf(
+    lambda category_str: string_hash(category_str),  # Conversion function
+    IntegerType()  # Return type
+)
+neighborhood_id = udf(
+    lambda neighborhood_str: string_hash(neighborhood_str),
+    IntegerType()
+)
 
 
 class ServiceCaseContext(Context):
-    """A class for easily creating DataFrames of 311 service cases"""
+    """A class for easily handling various sources of 311 service cases, and ensuring that they are handled in a
+    common format"""
 
     # The file to read from HDFS
     __file = os.environ["CORE_CONF_fs_defaultFS"] + "/datasets/311_Cases.csv"
+
+    # The host to which Flume ingests data
+    __flume_host = "pyspark"
+
+    # The port at which Flume ingests service cases
+    __flume_port = 4000
 
     # Describes how to convert between HBase tables and DataFrames
     # This catalog makes use of composite keys
@@ -46,13 +67,10 @@ class ServiceCaseContext(Context):
             }
         }""".split())
 
-    def __init__(self, session: SparkSession):
-        super().__init__(session)
-
-    def load_csv(self) -> DataFrame:
+    def load_csv(self, spark: SparkSession) -> DataFrame:
         # Read csv file
         # The multiline config is necessary to support strings with line breaks in the csv file
-        df = self.spark.read.format("csv") \
+        df = spark.read.format("csv") \
             .option("header", "true") \
             .option("multiline", "true") \
             .option('quote', '"') \
@@ -64,16 +82,6 @@ class ServiceCaseContext(Context):
         # Some neighborhood names were simply numbers...
         df = df.where(df["Category"].isNotNull() & df["Neighborhood"].isNotNull() &
                       (length(df["Neighborhood"]) > 1) & (length(df["Category"]) > 1))
-
-        # User defined function for calculating category and neighborhood numbers
-        category_id = udf(
-            lambda category_str: string_hash(category_str),  # Conversion function
-            IntegerType()  # Return type
-        )
-        neighborhood_id = udf(
-            lambda neighborhood_str: string_hash(neighborhood_str),
-            IntegerType()
-        )
 
         # Select useful columns and rename them
         # We also convert timestamp strings into seconds since epoch and prepare some columns for our row keys
@@ -96,11 +104,55 @@ class ServiceCaseContext(Context):
                        unix_timestamp(to_timestamp("Updated", "MM/dd/yyyy hh:mm:ss a")).alias("updated"),
                        df["Status"].alias("status"),
                        df["CaseID"].cast(IntegerType()).alias("case_id"))
-
         return df
 
-    def load_hbase(self) -> DataFrame:
-        return self.spark.read.options(catalog=self.__catalog).format(self._data_source_format).load()
+    def load_flume(self, ssc: StreamingContext) -> DStream:
+        stream = FlumeUtils.createStream(ssc, self.__flume_host, self.__flume_port)
+        # Map applies an operation to each element in the stream, whereas transform applies an operation on an RDD level
+        return stream.map(self.__parse_json) \
+            .transform(lambda rdd: self.__convert_service_format(rdd))
+
+    @staticmethod
+    def __parse_json(data: str) -> Row:
+        data_dict = json.loads(data[1])
+        # Inferring schema from dict is deprecated, and it might even leave us with missing columns
+        # Therefore, we create Row objects manually
+        return Row(openedStr=data_dict.get("requested_datetime", ""),
+                   status_notes=data_dict.get("status_notes", ""),
+                   category=data_dict.get("service_name", ""),
+                   request_type=data_dict.get("service_subtype", ""),
+                   request_details=data_dict.get("service_details", ""),
+                   neighborhood=data_dict.get("neighborhoods_sffind_boundaries", ""),
+                   address=data_dict.get("address", ""),
+                   street=data_dict.get("street", ""),
+                   latitude=float(data_dict.get("lat", "0")),
+                   longitude=float(data_dict.get("long", "0")),
+                   responsible_agency=data_dict.get("agency_responsible", ""),
+                   supervisor_district=int(data_dict.get("supervisor_district", "-1")),
+                   police_district=data_dict.get("police_district", ""),
+                   source=data_dict.get("source", ""),
+                   updatedStr=data_dict.get("updated_datetime", ""),
+                   status=data_dict.get("status_description", ""),
+                   case_id=data_dict.get("service_request_id", ""))
+
+    @staticmethod
+    def __convert_service_format(rdd: RDD) -> RDD:
+        if rdd.isEmpty():
+            return rdd
+
+        df = rdd.toDF()
+
+        # TODO: Find neighborhood from lat/lon
+        df = df.withColumn("category_id", category_id("Category")) \
+            .withColumn("neighborhood_id", neighborhood_id("Neighborhood")) \
+            .withColumn("opened", unix_timestamp(to_timestamp("openedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS"))) \
+            .withColumn("updated", unix_timestamp(to_timestamp("updatedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS"))) \
+            .drop("openedStr", "updatedStr")
+
+        return df.rdd
+
+    def load_hbase(self, spark: SparkSession) -> DataFrame:
+        return spark.read.options(catalog=self.__catalog).format(self._data_source_format).load()
 
     def save_hbase(self, df: DataFrame):
         df.write.options(catalog=self.__catalog, newtable="5").format(self._data_source_format).save()

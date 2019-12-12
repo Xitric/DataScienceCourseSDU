@@ -76,12 +76,12 @@ if __name__ == "__main__":
         .appName("SfDataImporter") \
         .getOrCreate()
 
-    context = ServiceCaseContext(spark)
+    context = ServiceCaseContext()
     # df = context.load_csv() \
     #     .limit(150000)  # For testing purposes
 
     # context.save_hbase(df)
-    load_df = context.load_hbase()
+    load_df = context.load_hbase(spark)
 
     # schema = load_df.schema
 
@@ -91,11 +91,12 @@ if __name__ == "__main__":
     #     count = df.where((df["category_id"] == CATEGORIES.index("Graffiti"))).count()
     #     return pandas.DataFrame([neighborhood] + [count])
 
-    # load_df.show(100, False)
-    load_df.where((load_df["category_id"] == (hash(CATEGORIES[0]) & 0xffffffff))) \
-        .groupBy(load_df["neighborhood_id"]) \
-        .agg(count(lit(1)).alias("sidewalk_cleaning")) \
-        .show(200, False)
+    load_df.show(100, False)
+    print(load_df.count())
+    # load_df.where((load_df["category_id"] == (hash(CATEGORIES[0]) & 0xffffffff))) \
+    #     .groupBy(load_df["neighborhood_id"]) \
+    #     .agg(count(lit(1)).alias("sidewalk_cleaning")) \
+    #     .show(200, False)
 
     # load_df.where((load_df["neighborhood_id"] < 5) & (load_df["category_id"] == CATEGORIES.index("Graffiti"))) \
     #     .groupBy(load_df["neighborhood_id"]) \

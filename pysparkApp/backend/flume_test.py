@@ -1,49 +1,27 @@
-from pyspark import SparkContext, SparkConf, RDD
-from pyspark.streaming import StreamingContext, DStream
-from pyspark.streaming.flume import FlumeUtils
-from pyspark.sql import SQLContext
-import json
+from pyspark import RDD
+from pyspark.sql import SparkSession
+from pyspark.streaming import StreamingContext
+from service_case_context import ServiceCaseContext
 
 
-def get_service_dstream() -> DStream:
-    return FlumeUtils.createPollingStream(ssc, [("flume", 4000)])
-
-
-def get_incident_dstream() -> DStream:
-    return FlumeUtils.createPollingStream(ssc, [("flume", 4001)])
-
-
-def handle_service_case(rdd: RDD):
+def handle_service_case(rdd: RDD, ctx: ServiceCaseContext):
     if not rdd.isEmpty():
-        rdd.toDF().show(10, False)
-
-
-def handle_incident_report(rdd: RDD):
-    if not rdd.isEmpty():
-        rdd.toDF().show(10, False)
+        ctx.save_hbase(rdd.toDF())
 
 
 if __name__ == "__main__":
-    # TODO: Can we use a spark session instead? That way we are not using different techniques in different places
-    # Create a local StreamingContext with two working threads and batch interval of 1 second
-    conf = SparkConf() \
-        .set('spark.driver.host', '127.0.0.1') \
-        .set("spark.jars.packages", "org.apache.spark:spark-streaming-flume_2.11:2.4.4")
-    sc = SparkContext("local[2]", "SFGovIngestion", conf=conf)
-    ssc = StreamingContext(sc, 1)
-    sql = SQLContext(sc)
-    print(sc.version)
+    spark = SparkSession.builder \
+        .master("local[2]") \
+        .appName("SFGovIngestion") \
+        .config('spark.driver.host', '127.0.0.1') \
+        .config("spark.jars", "/backend/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar") \
+        .config("spark.jars.packages", "org.apache.spark:spark-streaming-flume_2.11:2.4.4") \
+        .getOrCreate()
+    ssc = StreamingContext(spark.sparkContext, 1)
 
-    # Configure input DStreams for Flume
-    get_service_dstream().map(lambda rdd: json.loads(rdd[1])).foreachRDD(handle_service_case)
-    get_incident_dstream().map(lambda rdd: json.loads(rdd[1])).foreachRDD(handle_incident_report)
+    context = ServiceCaseContext()
+    context.load_flume(ssc).foreachRDD(lambda rdd: handle_service_case(rdd, context))
 
-    # Process data
-    # flumeStream.map(lambda rdd: json.loads(rdd[1])).foreachRDD(handleRDD)
-    # serviceStream.map(lambda rdd: json.loads(rdd[1])).foreachRDD(handle_service_case)
-    # policeStream.map(lambda rdd: json.loads(rdd[1])).foreachRDD(handle_incident_report)
-
-    # Run for 2 minutes
     ssc.start()
-    ssc.awaitTerminationOrTimeout(120)
+    ssc.awaitTerminationOrTimeout(50)
     ssc.stop()

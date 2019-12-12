@@ -90,7 +90,7 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 
 		executor.scheduleAtFixedRate(new SFGovSourceRunner(batchSize, dataSource, timeField, getChannelProcessor()),
 				0,
-				60,
+				20,
 				TimeUnit.SECONDS);
 		logger.info("SFGovSource scheduled for running");
 
@@ -148,9 +148,11 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 
 			logger.info("SFGovSource started");
 
+			int count = 0;
 			JsonArray results;
 			while ((results = httpClient.getSince(latestTime)).size() > 0) {
 				for (JsonElement result : results) {
+					count++;
 					updateLatest(result.getAsJsonObject());
 					bufferedEvents.add(EventBuilder.withBody(result.toString(), Charset.defaultCharset(), headers));
 					if (bufferedEvents.size() >= batchSize) {
@@ -163,7 +165,7 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 				processBatch();
 			}
 
-			logger.info("SFGovSource done reading new data");
+			logger.info("SFGovSource done reading new data (" + count + ")");
 		}
 
 		private LocalDateTime retryGetLatest() {
