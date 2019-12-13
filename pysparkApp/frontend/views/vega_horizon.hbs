@@ -1,0 +1,24 @@
+<div class="container">
+    
+    <div id="vis"></div>
+    {{!-- Because of the css, the menu will still be at the left side --}}
+    <div id="filters" class="dropdownmenu"> 
+            
+        <button onclick="btnToggle()" class="dropbutton"> 
+            Filters 
+        </button> 
+            
+        <div id="fiDropdown" class="dropdownmenu-content" >
+            {{#each (readData data)}}
+                <div class="innerContainer">
+                    <input id="{{@index}}checkFilter" type="checkbox" name="{{this}}" onclick="handleClick(this);" checked="null" class="filterCheck"/>
+                    <label for="{{@index}}checkFilter">{{this}}</label>
+                </div>
+            {{/each}}
+        </div> 
+        
+    </div>
+
+</div>
+
+<script src='/scripts/{{script}}.js'></script>
