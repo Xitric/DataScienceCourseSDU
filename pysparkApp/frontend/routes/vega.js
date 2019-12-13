@@ -13,7 +13,7 @@ router.get('/choro', function (req, res, next) {
 });
 
 router.get('/horizon', function (req, res, next) {
-    res.render('vega_horizon', {title: 'Horizon Visualization', script: 'vega_vis_horizon', layout: 'layout_vega', data: '../public/dataset/neighborhoods.txt'});
+    res.render('vega_horizon', {title: 'Horizon Visualization', script: 'vega_vis_horizon', layout: 'layout_vega', data: 'public/dataset/neighborhoods.txt'});
 });
 
 module.exports = router;

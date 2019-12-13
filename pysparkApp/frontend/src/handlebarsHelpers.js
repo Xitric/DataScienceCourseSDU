@@ -7,11 +7,11 @@ helpers = {
     },
 
     readData: function (file) {
-        var contents = fs.readFileSync(file, 'utf-8')
+        let contents = fs.readFileSync(file, 'utf-8');
         contents = contents.split(',');
 
         return contents;
     }
 };
 
-exports.helpers = helpers;
+module.exports.helpers = helpers;

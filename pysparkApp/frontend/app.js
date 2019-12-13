@@ -6,7 +6,7 @@ let logger = require('morgan');
 let hbs = require("express-handlebars");
 
 let indexRouter = require('./routes/index');
-let usersRouter = require('./routes/users');
+let adminRouter = require('./routes/admin');
 let vegaRouter = require('./routes/vega');
 
 let app = express();
@@ -29,7 +29,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/admin', adminRouter);
 app.use('/vega', vegaRouter);
 
 // catch 404 and forward to error handler
@@ -45,7 +45,7 @@ app.use(function (err, req, res, next) {
 
     // render the error page
     res.status(err.status || 500);
-    res.render('error');
+    res.render('error', {title: "An error occurred"});
 });
 
 module.exports = app;

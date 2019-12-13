@@ -40,12 +40,50 @@ a {
     background-color: #3f0253;
 }
 
-.category {
-    background-color: #f6f6f6;
-    float: left;
+#dashboard {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    padding: 32px;
+}
+
+.dashboardElement {
+    flex-basis: 25%;
+    max-width: 30%;
+    min-width: 250px;
     margin: 16px;
-    padding: 8px;
+    text-decoration: none;
+}
+
+.dashboardCard {
+    background-color: #f6f6f6;
     -webkit-box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.15);
     -moz-box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.15);
     box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.15);
 }
+
+.dashboardCardHead {
+    background-color: #510265;
+    color: #ffffff;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2em;
+    padding: 4px;
+}
+
+.dashboardCardContent {
+    padding: 8px;
+}
+
+button {
+    background-color: #35477d;
+    border-style: none;
+    padding: 8px;
+    color: #ffffff;
+    border-radius: 5px;
+}
+
+button:active {
+    background-color: #333468;
+}
+
