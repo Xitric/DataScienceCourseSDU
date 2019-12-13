@@ -57,6 +57,10 @@ WORKDIR /backend
 COPY shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar .
 COPY /backend .
 
+WORKDIR $SPARK_HOME/jars
+COPY geo_wrapper.jar .
+COPY geospark-1.2.0.jar .
+COPY geospark-sql_2.3-1.2.0.jar .
 # TODO: Remove if we create another container for Spark streaming
 EXPOSE 4444
 

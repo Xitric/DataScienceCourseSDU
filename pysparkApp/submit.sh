@@ -1,2 +1,2 @@
 #!/bin/bash
-spark-submit --master yarn --deploy-mode client /backend/data_importer.py
+spark-submit --py-files /backend/incident_modern_context.py,/backend/context.py /backend/data_importer.py

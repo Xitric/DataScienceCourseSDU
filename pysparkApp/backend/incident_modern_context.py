@@ -5,9 +5,33 @@ from pyspark.sql.functions import udf, unix_timestamp, to_timestamp
 from pyspark.sql.types import BooleanType, ArrayType, FloatType, DoubleType
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
-from geo_pyspark.register import GeoSparkRegistrator
 
 from context import Context
+from geo_pyspark.sql.types import GeometryType
+
+
+# Create and return an array of points based on the_geom string
+def create_polygon(multipolygon_string):
+    multipolygon_clean = multipolygon_string[16:-3]
+    points_with_spaces = multipolygon_clean.split(", ")
+    points = []
+    for point in points_with_spaces:
+        coordinates = point.split(" ")
+        points.append(Point(float(coordinates[1]), float(coordinates[0])))
+    # session.createDataFrame(Polygon([[p.x, p.y] for p in points])).show(10, True)
+    return Polygon([[p.x, p.y] for p in points])
+
+
+multipolygon = udf(
+    lambda multipolygon_string: create_polygon(multipolygon_string), GeometryType()#ArrayType(ArrayType(FloatType()))
+)
+
+# Check if the latitude and longitude is in the neighborhood represented as a Polygon
+check_neighborhood_in_polygon = udf(
+    lambda latitude, longitude, neighborhood_boundary:
+    Polygon(neighborhood_boundary).contains(Point(float(latitude), float(longitude))),
+    BooleanType()
+)
 
 class IncidentModernContext(Context):
     # File from HDFS
@@ -22,14 +46,18 @@ class IncidentModernContext(Context):
                 "analysis_neighborhood"
     }""")
 
-    def __init__(self, session: SparkSession):
-        super().__init__(session)
-
-    def load_csv(self) -> DataFrame:
+    def load_csv(self, session: SparkSession) -> DataFrame:
         # Read csv file
         # The multiline config is necessary to support strings with line breaks in the csv file
         # TODO FILE
-        incidents_modern_df = self.spark.read.format("csv") \
+
+        # geom = session.sql( """select st_geomFromWKT('POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10), (20 30, 35 35, 30 20, 20 30))') as geom""" )
+        # geom.show(10, True)
+
+
+        print("JOB1: " + str(session.sparkContext.parallelize([1, 2, 3]).count()))
+
+        incidents_modern_df = session.read.format("csv") \
             .option("header", "true") \
             .option("multiline", "true") \
             .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS") \
@@ -43,34 +71,10 @@ class IncidentModernContext(Context):
             incidents_modern_df["Longitude"].isNotNull()
         )
 
-        # Create and return an array of points based on the_geom string
-        def create_polygon(multipolygon_string):
-            multipolygon_clean = multipolygon_string[16:-3]
-            points_with_spaces = multipolygon_clean.split(", ")
-            points = []
-            for point in points_with_spaces:
-                coordinates = point.split(" ")
-                points.append(Point(float(coordinates[1]), float(coordinates[0])))
-                self.spark.createDataFrame(Polygon([[p.x, p.y] for p in points])).show(10,True)
-            return [[p.x, p.y] for p in points]
-
-        multipolygon = udf(
-            create_polygon, ArrayType(ArrayType(FloatType()))
-        )
-
-       # GeoSparkRegistrator.registerAll(self.spark)
-
-
-        # Check if the latitude and longitude is in the neighborhood represented as a Polygon
-        check_neighborhood_in_polygon = udf(
-            lambda latitude, longitude, neighborhood_boundary:
-            neighborhood_boundary.contains(Point(float(latitude), float(longitude))),
-            BooleanType()
-        )
-
+        incidents_modern_df.show(10, True)
         # Read the neighborhood file and make a polygon based on the_geom column
         sf_boundaries_file = os.environ["CORE_CONF_fs_defaultFS"] + "/datasets/SFFind_Neighborhoods.csv"
-        sf_boundaries_df = self.spark.read.format("csv").option("header", "true").load(sf_boundaries_file)
+        sf_boundaries_df = session.read.format("csv").option("header", "true").load(sf_boundaries_file).limit(10)
         sf_boundaries_df = sf_boundaries_df.withColumn("the_geom", multipolygon(sf_boundaries_df["the_geom"]))
         sf_boundaries_df = sf_boundaries_df.select(
             sf_boundaries_df["the_geom"].alias("polygon"),
@@ -78,37 +82,37 @@ class IncidentModernContext(Context):
         )
         sf_boundaries_df.show(10, True)
 
-        incidents_modern_df = incidents_modern_df.select(
-            unix_timestamp(to_timestamp("Incident Datetime", "yyyy/MM/dd hh:mm:ss a")).alias("incident_datetime"),
-            unix_timestamp(to_timestamp("Report Datetime", "yyyy/MM/dd hh:mm:ss a")).alias("report_datetime"),
-            incidents_modern_df["Row ID"].alias("row_id"),
-            incidents_modern_df["Incident ID"].alias("incident_id"),  # Docs: Plain text, seems to contain numbers only
-            incidents_modern_df["Incident Number"].alias("incident_number"),  # Text, seems to contain numbers only
-            incidents_modern_df["Report Type Code"].alias("report_type_code"),
-            incidents_modern_df["Report Type Description"].alias("report_type_description"),
-            incidents_modern_df["Incident Category"].alias("incident_category"),
-            incidents_modern_df["Incident Subcategory"].alias("incident_subcategory"),
-            incidents_modern_df["Resolution"].alias("resolution"),
-            incidents_modern_df["Intersection"].alias("intersection"),
-            incidents_modern_df["Police District"].alias("police_district"),  # Text, seems to contain numbers only
-            incidents_modern_df["Supervisor District"].alias("supervisor_district"),
-            incidents_modern_df["Latitude"].cast(DoubleType()).alias("latitude"),
-            incidents_modern_df["Longitude"].cast(DoubleType()).alias("longitude")
-        )
-
-        incidents_modern_df = incidents_modern_df.join(
-            sf_boundaries_df,
-            check_neighborhood_in_polygon("latitude", "longitude", "polygon"),
-            "cross"
-        )
-
-        incidents_modern_df.show(10, True)
-        return incidents_modern_df
+        # incidents_modern_df = incidents_modern_df.select(
+        #     unix_timestamp(to_timestamp("Incident Datetime", "yyyy/MM/dd hh:mm:ss a")).alias("incident_datetime"),
+        #     unix_timestamp(to_timestamp("Report Datetime", "yyyy/MM/dd hh:mm:ss a")).alias("report_datetime"),
+        #     incidents_modern_df["Row ID"].alias("row_id"),
+        #     incidents_modern_df["Incident ID"].alias("incident_id"),  # Docs: Plain text, seems to contain numbers only
+        #     incidents_modern_df["Incident Number"].alias("incident_number"),  # Text, seems to contain numbers only
+        #     incidents_modern_df["Report Type Code"].alias("report_type_code"),
+        #     incidents_modern_df["Report Type Description"].alias("report_type_description"),
+        #     incidents_modern_df["Incident Category"].alias("incident_category"),
+        #     incidents_modern_df["Incident Subcategory"].alias("incident_subcategory"),
+        #     incidents_modern_df["Resolution"].alias("resolution"),
+        #     incidents_modern_df["Intersection"].alias("intersection"),
+        #     incidents_modern_df["Police District"].alias("police_district"),  # Text, seems to contain numbers only
+        #     incidents_modern_df["Supervisor District"].alias("supervisor_district"),
+        #     incidents_modern_df["Latitude"].cast(DoubleType()).alias("latitude"),
+        #     incidents_modern_df["Longitude"].cast(DoubleType()).alias("longitude")
+        # )
+        #
+        # incidents_modern_df = incidents_modern_df.join(
+        #     sf_boundaries_df,
+        #     check_neighborhood_in_polygon("latitude", "longitude", "polygon"),
+        #     "cross"
+        # )
+        #
+        # incidents_modern_df.show(10, True)
+        # return incidents_modern_df
 
 
 # TODO IMPLEMENT CONTEXT
 def load_hbase(self) -> DataFrame:
-    return self.spark.read.option()
+    # return spark.read.option()
     pass
 
 

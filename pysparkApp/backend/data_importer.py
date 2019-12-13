@@ -1,10 +1,6 @@
-import findspark
-from geo_pyspark.utils import GeoSparkKryoRegistrator, KryoSerializer
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import count, lit
-
-from geo_pyspark.register import upload_jars
 from geo_pyspark.register import GeoSparkRegistrator
+from geo_pyspark.register import upload_jars
+from pyspark.sql import SparkSession
 
 from incident_modern_context import IncidentModernContext
 
@@ -71,24 +67,35 @@ CATEGORIES = ["Street and Sidewalk Cleaning", "Graffiti", "Abandoned Vehicle", "
 
 if __name__ == "__main__":
     # SparkContext is old tech! Therefore we use the modern SparkSession
-    upload_jars()
+    
+    #upload_jars()
 
     spark = SparkSession.builder \
         .master("local") \
-        .config('spark.driver.host', '127.0.0.1') \
+        .config('spark.driver.host', '172.200.0.55') \
+        .config('spark.driver.port', '43345') \
+        .config('spark.submit.deployMode', 'client') \
         .config("spark.jars", "/backend/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar") \
-        .config("spark.driver.memory", "1g") \
-        .config("spark.executor.memory", "2g") \
-        .config("spark.network.timeout", "60s") \
         .appName("SfDataImporter") \
         .getOrCreate()
 
     # .config("spark.serializer", KryoSerializer.getName) \
     # .config("spark.kryo.registrator", GeoSparkKryoRegistrator.getName) \
 
-   # GeoSparkRegistrator.registerAll(spark)
+    GeoSparkRegistrator.registerAll(spark)
+    
+    context = IncidentModernContext()
+    context.load_csv(spark)
 
-   # GeoSparkRegistrator.register(SparkSession.builder.getOrCreate())
+
+
+
+
+
+
+
+
+
 
 
 
@@ -119,7 +126,4 @@ if __name__ == "__main__":
     #     .apply(count_graffiti) \
     #     .show(10, False)
     # print(load_df.count())
-
-    context = IncidentModernContext(spark)
-    context.load_csv()#.show(200, true)
 
