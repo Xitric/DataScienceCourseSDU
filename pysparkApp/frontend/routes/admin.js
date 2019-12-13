@@ -9,7 +9,7 @@ router.get('/', function (req, res, next) {
 
 router.post('/ingest', function (req, res, next) {
     let client = new SparkClient();
-    client.ingestDataStreaming();
+    client.ingestDataStreaming("Hello");
     res.redirect("back");
 });
 
