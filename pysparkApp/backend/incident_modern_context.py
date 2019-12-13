@@ -123,10 +123,9 @@ class IncidentModernContext(Context):
 
 
 # TODO IMPLEMENT CONTEXT
-def load_hbase(self) -> DataFrame:
-    # return spark.read.option()
-    pass
+def load_hbase(self, session: SparkSession) -> DataFrame:
+    return session.read.options(catalog=self.__catalog).format(self._data_source_format).load()
 
 
 def save_hbase(self, df: DataFrame):
-    pass
+    df.write.options(catalog=self.__catalog, newtable="5").format(self._data_source_format).save()
