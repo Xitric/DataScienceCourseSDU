@@ -64,7 +64,7 @@ EXPOSE 4444
 EXPOSE 43345
 #CMD ["python data_importer.py"]
 
-ADD run.sh /run.sh
-RUN chmod a+x /run.sh
-CMD ["/bin/bash", "/run.sh"]
+ADD submit.sh /submit.sh
+RUN chmod a+x /submit.sh
+CMD ["/bin/bash", "/submit.sh"]
 # CMD ["/bin/bash"]
