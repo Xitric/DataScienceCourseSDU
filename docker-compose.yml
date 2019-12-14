@@ -81,7 +81,7 @@ services:
       - ./hbase.env
     networks:
       cscourse:
-        ipv4_address: 172.200.0.20
+        ipv4_address: 172.200.0.10
   
   zoo:
     image: zookeeper:3.4.10
@@ -95,7 +95,7 @@ services:
       - zoo_datalog:/datalog
     networks:
       cscourse:
-        ipv4_address: 172.200.0.21
+        ipv4_address: 172.200.0.11
   
   region1:
     image: xitric/hbase-region:latest
@@ -110,7 +110,7 @@ services:
       - ./hbase.env
     networks:
       cscourse:
-        ipv4_address: 172.200.0.22
+        ipv4_address: 172.200.0.12
   
   region2:
     image: xitric/hbase-region:latest
@@ -125,8 +125,8 @@ services:
       - ./hbase.env
     networks:
       cscourse:
-        ipv4_address: 172.200.0.23
-  
+        ipv4_address: 172.200.0.13
+
   region3:
     image: xitric/hbase-region:latest
     container_name: region3
@@ -140,23 +140,9 @@ services:
       - ./hbase.env
     networks:
       cscourse:
-        ipv4_address: 172.200.0.24
-  
-  mysql:
-    image: xitric/sfdb:latest
-    container_name: mysql
-    restart: on-failure
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-    volumes:
-      - mysql_data:/var/lib/mysql
-    ports:
-      - 3306:3306
-    networks:
-      cscourse:
-        ipv4_address: 172.200.0.30
+        ipv4_address: 172.200.0.14
 
-  resourcemanager: #Yarn
+  resourcemanager:
     image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.1.2-java8
     container_name: resourcemanager
     restart: on-failure
@@ -168,51 +154,9 @@ services:
       - ./hadoop.env
     networks:
       cscourse:
-        ipv4_address: 172.200.0.6
+        ipv4_address: 172.200.0.20
 
-  nodemanager1: #Node Orchestrator (for containers)
-    image: nodemanager:latest
-    container_name: nodemanager1
-    restart: on-failure
-    ports:
-      - 8042:8042
-    environment:
-      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
-    env_file:
-      - ./hadoop.env
-    networks:
-      cscourse:
-        ipv4_address: 172.200.0.7
-  
-  # nodemanager2: #Node Orchestrator (for containers)
-  #   image: nodemanager:latest
-  #   container_name: nodemanager2
-  #   restart: on-failure
-  #   ports:
-  #     - 8043:8042
-  #   environment:
-  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
-  #   env_file:
-  #     - ./hadoop.env
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.9
-
-  # nodemanager3: #Node Orchestrator (for containers)
-  #   image: nodemanager:latest
-  #   container_name: nodemanager3
-  #   restart: on-failure
-  #   ports:
-  #     - 8044:8042
-  #   environment:
-  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
-  #   env_file:
-  #     - ./hadoop.env
-  #   networks:
-  #     cscourse:
-  #       ipv4_address: 172.200.0.10        
-        
-  historyserver: #Job Store
+  historyserver:
     image: bde2020/hadoop-historyserver:2.0.0-hadoop3.1.2-java8
     container_name: historyserver
     restart: on-failure
@@ -226,7 +170,63 @@ services:
       - ./hadoop.env
     networks:
       cscourse:
-        ipv4_address: 172.200.0.8
+        ipv4_address: 172.200.0.21
+
+  nodemanager:
+    image: nodemanager:latest
+    container_name: nodemanager
+    restart: on-failure
+    ports:
+      - 8042:8042
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.22
+  
+  # nodemanager2: #Node Orchestrator (for containers)
+  #   image: nodemanager:latest
+  #   container_name: nodemanager2
+  #   restart: on-failure
+  #   ports:
+  #     - 8043:8042
+  #   environment:
+  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
+  #   env_file:
+  #     - ./hadoop.env
+  #   networks:
+  #     cscourse:
+  #       ipv4_address: 172.200.0.23
+
+  # nodemanager3: #Node Orchestrator (for containers)
+  #   image: nodemanager:latest
+  #   container_name: nodemanager3
+  #   restart: on-failure
+  #   ports:
+  #     - 8044:8042
+  #   environment:
+  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
+  #   env_file:
+  #     - ./hadoop.env
+  #   networks:
+  #     cscourse:
+  #       ipv4_address: 172.200.0.24
+
+  mysql:
+    image: xitric/sfdb:latest
+    container_name: mysql
+    restart: on-failure
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.30
 
 networks:
   cscourse:

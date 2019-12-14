@@ -1,2 +1,2 @@
 #!/bin/bash
-spark-submit --master yarn --deploy-mode client /backend/test_file.py
+spark-submit --master yarn --deploy-mode cluster /backend/test_file.py
