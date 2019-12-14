@@ -1,12 +1,12 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import count, lit
 
-from service_case_context import ServiceCaseContext
+from data_importer.service_case_context import ServiceCaseContext
 
 DATA_SOURCE_FORMAT = "org.apache.spark.sql.execution.datasources.hbase"
 NEIGHBORHOODS = ["Seacliff", "Lake Street", "Presidio National Park", "Presidio Terrace", "Inner Richmond",
                  "Sutro Heights", "Lincoln Park / Ft. Miley", "Outer Richmond", "Golden Gate Park", "Presidio Heights",
-                 "Laurel Heights / Jordan Park", "Lone Mountain", "Anza Vista", "Cow Hollow", "Union Street", "Nob Hill",
+                 "Laurel Heights / Jordan Park", "Lone Mountain", "Anza Vista", "Cow Hollow", "Union Street",
+                 "Nob Hill",
                  "Laurel Heights / Jordan Park", "Lone Mountain", "Anza Vista", "Cow Hollow", "Union Street",
                  "Nob Hill",
                  "Marina", "Telegraph Hill", "Downtown / Union Square", "Tenderloin", "Civic Center", "Hayes Valley",
@@ -65,23 +65,20 @@ CATEGORIES = ["Street and Sidewalk Cleaning", "Graffiti", "Abandoned Vehicle", "
               "General Request - REDEVELOPMENT AGENCY", "PUC Sewer Ops"]
 
 if __name__ == "__main__":
-    # SparkContext is old tech! Therefore we use the modern SparkSession
     spark = SparkSession.builder \
+        .appName("SfDataImporter") \
         .master("local") \
         .config('spark.driver.host', '127.0.0.1') \
-        .config("spark.jars", "/backend/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar") \
-        .config("spark.driver.memory", "1g") \
-        .config("spark.executor.memory", "2g") \
-        .config("spark.network.timeout", "60s") \
-        .appName("SfDataImporter") \
+        .config("spark.jars", "shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar") \
         .getOrCreate()
 
     context = ServiceCaseContext()
-    # df = context.load_csv() \
-    #     .limit(150000)  # For testing purposes
+    df = context.load_csv(spark) \
+        .limit(150000)  # For testing purposes
 
-    # context.save_hbase(df)
+    context.save_hbase(df)
     load_df = context.load_hbase(spark)
+    print(load_df.count())
 
     # schema = load_df.schema
 
@@ -91,8 +88,8 @@ if __name__ == "__main__":
     #     count = df.where((df["category_id"] == CATEGORIES.index("Graffiti"))).count()
     #     return pandas.DataFrame([neighborhood] + [count])
 
-    load_df.show(100, False)
-    print(load_df.count())
+    # load_df.show(100, False)
+    # print(load_df.count())
     # load_df.where((load_df["category_id"] == (hash(CATEGORIES[0]) & 0xffffffff))) \
     #     .groupBy(load_df["neighborhood_id"]) \
     #     .agg(count(lit(1)).alias("sidewalk_cleaning")) \

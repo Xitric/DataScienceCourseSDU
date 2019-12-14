@@ -214,6 +214,18 @@ services:
   #     cscourse:
   #       ipv4_address: 172.200.0.24
 
+  # flume:
+  #   image: xitric/flume:latest
+  #   container_name: flume
+  #   hostname: flume
+  #   restart: on-failure
+  #   env_file:
+  #     - ./secrets.env
+  #     - ./flume.env
+  #   networks:
+  #     cscourse:
+  #       ipv4_address: 172.200.0.30
+
   mysql:
     image: xitric/sfdb:latest
     container_name: mysql
@@ -226,7 +238,7 @@ services:
       - 3306:3306
     networks:
       cscourse:
-        ipv4_address: 172.200.0.30
+        ipv4_address: 172.200.0.40
 
 networks:
   cscourse:

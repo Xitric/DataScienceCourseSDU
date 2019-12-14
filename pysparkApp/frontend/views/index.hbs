@@ -1,2 +1,42 @@
-<h1>{{title}}</h1>
-<p>Welcome to {{title}}</p>
+<div id="dashboard">
+    <a class="dashboardElement" href="/admin">
+        <div class="dashboardCard">
+            <div class="dashboardCardHead">
+                <p>Admin panel</p>
+            </div>
+            <div class="dashboardCardContent">
+                <p>Manage Spark jobs in the cluster. If this is the first time the cluster is running, this panel can be used for the initial setup.</p>
+            </div>
+        </div>
+    </a>
+    <a class="dashboardElement" href="/vega/choro">
+        <div class="dashboardCard">
+            <div class="dashboardCardHead">
+                <p>Choropleth maps</p>
+            </div>
+            <div class="dashboardCardContent">
+                <p>View the distribution of crime and service cases in San Francisco to identify hotspots.</p>
+            </div>
+        </div>
+    </a>
+    <a class="dashboardElement">
+        <div class="dashboardCard">
+            <div class="dashboardCardHead">
+                <p>Correlation graphs</p>
+            </div>
+            <div class="dashboardCardContent">
+                <p>Analyze correlations between specific types of crimes and service cases.</p>
+            </div>
+        </div>
+    </a>
+    <a class="dashboardElement" href="/vega/horizon">
+        <div class="dashboardCard">
+            <div class="dashboardCardHead">
+                <p>Horizon graphs</p>
+            </div>
+            <div class="dashboardCardContent">
+                <p>Compare the historical developments in crime or service reports across neighborhoods.</p>
+            </div>
+        </div>
+    </a>
+</div>

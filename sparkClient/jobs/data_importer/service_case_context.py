@@ -1,7 +1,7 @@
 import os
 
-from context import Context
-from string_hasher import string_hash
+from data_importer.context import Context
+from data_importer.string_hasher import string_hash
 from pyspark.sql import SparkSession, DataFrame, Row
 from pyspark.sql.functions import udf, length, unix_timestamp, to_timestamp
 from pyspark.sql.types import IntegerType, DoubleType
@@ -28,7 +28,7 @@ class ServiceCaseContext(Context):
     # The file to read from HDFS
     __file = os.environ["CORE_CONF_fs_defaultFS"] + "/datasets/311_Cases.csv"
 
-    # The host to which Flume ingests data
+    # The host to which Flume ingests data_importer
     __flume_host = "pyspark"
 
     # The port at which Flume ingests service cases

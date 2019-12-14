@@ -56,6 +56,10 @@ COPY /backend .
 WORKDIR $SPARK_HOME/jars
 COPY /jars .
 
+# Remove if we create another container for Spark streaming
+EXPOSE 4000
+EXPOSE 4001
+
 ADD run.sh /run.sh
 RUN chmod a+x /run.sh
 
