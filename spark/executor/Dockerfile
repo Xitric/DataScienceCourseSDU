@@ -12,3 +12,7 @@ RUN python -m pip install geo_pyspark-0.2.0-py3-none-any.whl
 
 # Add configurations
 COPY hbase-site.xml $HADOOP_CONF_DIR/
+
+# Add geopspark files
+WORKDIR $SPARK_HOME/jars
+COPY /jars .

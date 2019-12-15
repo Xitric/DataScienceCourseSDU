@@ -173,7 +173,7 @@ services:
   #       ipv4_address: 172.200.0.21
 
   # nodemanager:
-  #   image: nodemanager:latest
+  #   image: xitric/nodemanager:latest
   #   container_name: nodemanager
   #   restart: on-failure
   #   ports:
@@ -187,7 +187,7 @@ services:
   #       ipv4_address: 172.200.0.22
   
   # nodemanager2: #Node Orchestrator (for containers)
-  #   image: nodemanager:latest
+  #   image: xitric/nodemanager:latest
   #   container_name: nodemanager2
   #   restart: on-failure
   #   ports:
@@ -201,7 +201,7 @@ services:
   #       ipv4_address: 172.200.0.23
 
   # nodemanager3: #Node Orchestrator (for containers)
-  #   image: nodemanager:latest
+  #   image: xitric/nodemanager:latest
   #   container_name: nodemanager3
   #   restart: on-failure
   #   ports:
