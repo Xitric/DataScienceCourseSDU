@@ -79,7 +79,7 @@ class IncidentModernContext(Context):
             .option("multiline", "true") \
             .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS") \
             .load(self.incident_modern_file) \
-            .limit(50)
+            .limit(10)
 
         # Remove rows missing category or location information
         incidents_df = incidents_df.where(
@@ -103,8 +103,8 @@ class IncidentModernContext(Context):
             incidents_df["Incident Category"].alias("incident_category"),
             string_to_hash("Incident Category").alias("incident_category_id"),
             incidents_df["Incident Subcategory"].alias("incident_subcategory"),
-            unix_timestamp("Incident Datetime", "yyyy/MM/dd hh:mm:ss a").alias("incident_datetime"),
-            unix_timestamp("Report Datetime", "yyyy/MM/dd hh:mm:ss a").alias("report_datetime"),
+            unix_timestamp("Incident Datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType()).alias("incident_datetime"),
+            unix_timestamp("Report Datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType()).alias("report_datetime"),
             incidents_df["Incident ID"].alias("incident_id"),
             incidents_df["Resolution"].alias("resolution"),
             incidents_df["Intersection"].alias("intersection"),
@@ -128,7 +128,7 @@ class IncidentModernContext(Context):
         incidents_df = incidents_df.withColumn("analysis_neighborhood_id", string_to_hash(
             incidents_df["analysis_neighborhood"]))
 
-        incidents_df.show(100, True)
+       # incidents_df.show(100, True)
         return incidents_df
 
     def load_hbase(self, session: SparkSession) -> DataFrame:
