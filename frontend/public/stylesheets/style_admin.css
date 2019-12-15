@@ -2,6 +2,10 @@
     padding: 16px;
 }
 
+.dashboardCard {
+    margin-bottom: 16px;
+}
+
 .dashboardCardHead {
     text-align: left;
 }

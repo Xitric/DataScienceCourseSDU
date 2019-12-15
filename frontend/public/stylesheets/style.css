@@ -87,3 +87,8 @@ button:active {
     background-color: #333468;
 }
 
+.code {
+    font-family: Consolas, serif;
+    color: #0770ff;
+}
+
