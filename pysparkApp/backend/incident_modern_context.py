@@ -1,36 +1,13 @@
 import os
 
-from geo_pyspark.sql.types import GeometryType
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import udf, unix_timestamp, to_timestamp
-from pyspark.sql.types import BooleanType, DoubleType, IntegerType
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
-from string_hasher import string_hash
+from pyspark.sql.functions import udf, unix_timestamp
+from pyspark.sql.types import DoubleType, IntegerType
+from pyspark.streaming import StreamingContext, DStream
+
 from context import Context
-
-
-# Create and return an array of points based on the neighborhood boundary string
-def create_polygon(neighborhood_boundary_string):
-    neighborhood_boundary = neighborhood_boundary_string[16:-3]
-    points_with_spaces = neighborhood_boundary.split(", ")
-    points = []
-    for point in points_with_spaces:
-        coordinates = point.split(" ")
-        points.append(Point(float(coordinates[1]), float(coordinates[0])))
-    return Polygon([[p.x, p.y] for p in points])
-
-
-polygon = udf(
-    lambda neighborhood_boundary_string: create_polygon(neighborhood_boundary_string), GeometryType()
-)
-
-# Check if the latitude and longitude is in the neighborhood represented as a Polygon
-check_neighborhood_in_polygon = udf(
-    lambda latitude, longitude, polygon_object:
-    polygon_object.contains(Point(float(latitude), float(longitude))),
-    BooleanType()
-)
+from neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
+from string_hasher import string_hash
 
 string_to_hash = udf(
     lambda string: string_hash(string),
@@ -45,14 +22,14 @@ class IncidentModernContext(Context):
 
     __catalog = ''.join("""{
             "table":{"namespace":"default", "name":"modern_incident_reports"},
-            "rowkey":"key_analysis_neighborhood:key_incident_category:key_incident_datetime:key_row_id",
+            "rowkey":"key_neighborhood:key_incident_category:key_incident_datetime:key_row_id",
             "columns":{
-                "analysis_neighborhood_id":{"cf":"rowkey", "col":"key_analysis_neighborhood", "type":"int"},
+                "neighborhood_id":{"cf":"rowkey", "col":"key_neighborhood", "type":"int"},
                 "incident_category_id":{"cf":"rowkey", "col":"key_incident_category", "type":"int"},
                 "incident_datetime":{"cf":"rowkey", "col":"key_incident_datetime", "type":"int"},
                 "row_id":{"cf":"rowkey", "col":"key_row_id", "type":"int"},
                 
-                "analysis_neighborhood":{"cf":"a", "col":"analysis_neighborhood", "type":"string"},
+                "neighborhood":{"cf":"a", "col":"neighborhood", "type":"string"},
                 "incident_category":{"cf":"a", "col":"incident_category", "type":"string"},
                 "incident_subcategory":{"cf":"a", "col":"incident_subcategory", "type":"string"},
                 "incident_datetime":{"cf":"a", "col":"incident_datetime", "type":"int"},
@@ -72,29 +49,19 @@ class IncidentModernContext(Context):
               }  
     }""".split())
 
-    def load_csv(self, session: SparkSession) -> DataFrame:
+    def load_csv(self, spark: SparkSession) -> DataFrame:
         # Read csv file
-        incidents_df = session.read.format("csv") \
+        incidents_df = spark.read.format("csv") \
             .option("header", "true") \
             .option("multiline", "true") \
             .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS") \
             .load(self.incident_modern_file) \
-            .limit(10)
-
+ \
         # Remove rows missing category or location information
         incidents_df = incidents_df.where(
             incidents_df["Incident Category"].isNotNull() &
             incidents_df["Latitude"].isNotNull() &
             incidents_df["Longitude"].isNotNull()
-        )
-
-        # Read the neighborhood file from HDFS and create polygons based on the neighborhood boundaries
-        sf_boundaries_file = os.environ["CORE_CONF_fs_defaultFS"] + "/datasets/SFFind_Neighborhoods.csv"
-        sf_boundaries_df = session.read.format("csv").option("header", "true").load(sf_boundaries_file)
-        sf_boundaries_df = sf_boundaries_df.withColumn("the_geom", polygon(sf_boundaries_df["the_geom"]))
-        sf_boundaries_df = sf_boundaries_df.select(
-            sf_boundaries_df["the_geom"].alias("polygon"),
-            sf_boundaries_df["name"].alias("analysis_neighborhood")
         )
 
         # Select the relevant columns
@@ -117,19 +84,23 @@ class IncidentModernContext(Context):
             incidents_df["Supervisor District"].alias("supervisor_district")
         )
 
-        # Join incident_modern_df and sf_boundaries_df if latitude and longitude is in the polygon
+        neighborhood_boundaries_df = neighborhood_boundaries(spark)
+
+        # Join incident_modern_df and neighborhood_boundaries_df if latitude and longitude is in the polygon
         incidents_df = incidents_df.join(
-            sf_boundaries_df,
-            check_neighborhood_in_polygon("latitude", "longitude", "polygon"),
+            neighborhood_boundaries_df,
+            is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
             "cross"
         )
 
         incidents_df = incidents_df.drop("polygon")
-        incidents_df = incidents_df.withColumn("analysis_neighborhood_id", string_to_hash(
-            incidents_df["analysis_neighborhood"]))
+        incidents_df = incidents_df.withColumn("neighborhood_id", string_to_hash(incidents_df["neighborhood"]))
 
-       # incidents_df.show(100, True)
         return incidents_df
+
+    # TODO
+    def load_flume(self, ssc: StreamingContext) -> DStream:
+       pass
 
     def load_hbase(self, session: SparkSession) -> DataFrame:
         return session.read.options(catalog=self.__catalog).format(self._data_source_format).load()
