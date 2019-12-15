@@ -33,16 +33,16 @@ ENV SPARK_HOME="/opt/spark"
 
 # TODO: Install dependencies (only for local mode)
 # Install Python packages
-# WORKDIR /
-# RUN python -m pip install --upgrade pip
-# RUN python -m pip install pyspark
-# RUN python -m pip install shapely
-# RUN python -m pip install pandas
-# RUN python -m pip install wheel
-# COPY geo_pyspark-0.2.0-py3-none-any.whl /
-# RUN python -m pip install geo_pyspark-0.2.0-py3-none-any.whl
-# RUN apt-get autoremove -y
-# RUN apt-get clean
+WORKDIR /
+RUN python -m pip install --upgrade pip
+RUN python -m pip install pyspark
+RUN python -m pip install shapely
+RUN python -m pip install pandas
+RUN python -m pip install wheel
+COPY geo_pyspark-0.2.0-py3-none-any.whl /
+RUN python -m pip install geo_pyspark-0.2.0-py3-none-any.whl
+RUN apt-get autoremove -y
+RUN apt-get clean
 
 # Set configurations
 COPY hbase-site.xml $HADOOP_CONF_DIR/
@@ -52,15 +52,19 @@ WORKDIR /backend
 COPY shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar .
 COPY /backend .
 
+
 # Enable history server connectivity
 WORKDIR $SPARK_HOME/jars
 COPY /jars .
+COPY geo_wrapper.jar .
+COPY geospark-1.2.0.jar .
+COPY geospark-sql_2.3-1.2.0.jar .
 
 # Remove if we create another container for Spark streaming
 EXPOSE 4000
 EXPOSE 4001
 
-ADD run.sh /run.sh
-RUN chmod a+x /run.sh
+ADD submit.sh /submit.sh
+RUN chmod a+x /submit.sh
 
-CMD ["/bin/bash", "/run.sh"]
+CMD ["/bin/bash", "/submit.sh"]

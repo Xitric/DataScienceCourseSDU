@@ -1,7 +1,8 @@
+from geo_pyspark.register import GeoSparkRegistrator
+from geo_pyspark.register import upload_jars
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import count, lit
 
-from service_case_context import ServiceCaseContext
+from incident_modern_context import IncidentModernContext
 
 DATA_SOURCE_FORMAT = "org.apache.spark.sql.execution.datasources.hbase"
 NEIGHBORHOODS = ["Seacliff", "Lake Street", "Presidio National Park", "Presidio Terrace", "Inner Richmond",
@@ -66,22 +67,27 @@ CATEGORIES = ["Street and Sidewalk Cleaning", "Graffiti", "Abandoned Vehicle", "
 
 if __name__ == "__main__":
     # SparkContext is old tech! Therefore we use the modern SparkSession
+    
+    #upload_jars()
+
     spark = SparkSession.builder \
         .master("local") \
-        .config('spark.driver.host', '127.0.0.1') \
+        .config('spark.driver.host', '172.200.0.55') \
+        .config('spark.driver.port', '43345') \
+        .config('spark.submit.deployMode', 'client') \
         .config("spark.jars", "/backend/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar") \
-        .config("spark.driver.memory", "1g") \
-        .config("spark.executor.memory", "2g") \
-        .config("spark.network.timeout", "60s") \
         .appName("SfDataImporter") \
         .getOrCreate()
 
-    context = ServiceCaseContext()
-    # df = context.load_csv() \
-    #     .limit(150000)  # For testing purposes
+    GeoSparkRegistrator.registerAll(spark)
 
-    # context.save_hbase(df)
+    context = IncidentModernContext()
+    df = context.load_csv(spark)
+    context.save_hbase(df)
+    df.show(100, True)
     load_df = context.load_hbase(spark)
+    load_df.show(100, False)
+
 
     # schema = load_df.schema
 
@@ -91,8 +97,8 @@ if __name__ == "__main__":
     #     count = df.where((df["category_id"] == CATEGORIES.index("Graffiti"))).count()
     #     return pandas.DataFrame([neighborhood] + [count])
 
-    load_df.show(100, False)
-    print(load_df.count())
+
+    #print(load_df.count())
     # load_df.where((load_df["category_id"] == (hash(CATEGORIES[0]) & 0xffffffff))) \
     #     .groupBy(load_df["neighborhood_id"]) \
     #     .agg(count(lit(1)).alias("sidewalk_cleaning")) \
@@ -103,3 +109,4 @@ if __name__ == "__main__":
     #     .apply(count_graffiti) \
     #     .show(10, False)
     # print(load_df.count())
+
