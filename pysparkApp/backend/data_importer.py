@@ -85,18 +85,11 @@ if __name__ == "__main__":
     GeoSparkRegistrator.registerAll(spark)
     
     context = IncidentModernContext()
-    context.load_csv(spark)
-
-
-
-
-
-
-
-
-
-
-
+    df = context.load_csv(spark)
+    context.save_hbase(df)
+    df.show(100, True)
+    load_df = context.load_hbase(spark)
+    load_df.show(100, False)
 
 
     #context = ServiceCaseContext(spark)

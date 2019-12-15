@@ -142,19 +142,19 @@ services:
       cscourse:
         ipv4_address: 172.200.0.24
   
-  mysql:
-    image: xitric/sfdb:latest
-    container_name: mysql
-    restart: on-failure
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-    volumes:
-      - mysql_data:/var/lib/mysql
-    ports:
-      - 3306:3306
-    networks:
-      cscourse:
-        ipv4_address: 172.200.0.30
+  # mysql:
+  #   image: xitric/sfdb:latest
+  #   container_name: mysql
+  #   restart: on-failure
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: password
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   ports:
+  #     - 3306:3306
+  #   networks:
+  #     cscourse:
+  #       ipv4_address: 172.200.0.30
 
   resourcemanager: #Yarn
     image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.1.2-java8
@@ -248,7 +248,7 @@ volumes:
     name: zookeeper
   zoo_datalog:
     name: zookeeper_log
-  mysql_data:
-    name: mysql
+  # mysql_data:
+  #   name: mysql
   hadoop_historyserver:
     name: historyserver

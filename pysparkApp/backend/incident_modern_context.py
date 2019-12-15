@@ -32,13 +32,8 @@ check_neighborhood_in_polygon = udf(
     BooleanType()
 )
 
-analysis_neighborhood_id = udf(
-    lambda analysis_neighborhood_str: string_hash(analysis_neighborhood_str),
-    IntegerType()
-)
-
-incident_category_id = udf(
-    lambda incident_category_str: string_hash(incident_category_str),
+string_to_hash = udf(
+    lambda string: string_hash(string),
     IntegerType()
 )
 
@@ -50,15 +45,15 @@ class IncidentModernContext(Context):
 
     # TODO HBase table
     __catalog = ''.join("""{
-            "table":{"namespace:"default", "name":incidents_modern"},
+            "table":{"namespace":"default", "name":"modern_incident_reports"},
             "rowkey":"key_analysis_neighborhood:key_incident_category:key_incident_datetime:key_row_id",
             "columns":{
                 "analysis_neighborhood_id":{"cf":"rowkey", "col":"key_analysis_neighborhood", "type":"int"},
                 "incident_category_id":{"cf":"rowkey", "col":"key_incident_category", "type":"int"},
                 "incident_datetime":{"cf":"rowkey", "col":"key_incident_datetime", "type":"int"},
-                "row_id":{"cf":"rowkey", "col":"key_row_id", "type":"int},
+                "row_id":{"cf":"rowkey", "col":"key_row_id", "type":"int"},
                 
-                "analysis_neighborhood":{"cf":"a", "col":"opened", "type":"string"},
+                "analysis_neighborhood":{"cf":"a", "col":"analysis_neighborhood", "type":"string"},
                 "incident_category":{"cf":"a", "col":"incident_category", "type":"string"},
                 "incident_subcategory":{"cf":"a", "col":"incident_subcategory", "type":"string"},
                 "incident_datetime":{"cf":"a", "col":"incident_datetime", "type":"int"},
@@ -67,14 +62,14 @@ class IncidentModernContext(Context):
                 "resolution":{"cf":"a", "col":"resolution", "type":"string"},
                 
                 "intersection":{"cf":"l", "col":"intersection", "type":"string"},
-                "latitude":{"cf":"l", "col":"latitude", "type":"double"},            
+                "latitude":{"cf":"l", "col":"latitude", "type":"double"},
                 "longitude":{"cf":"l", "col":"longitude", "type":"double"},
                 
                 "report_type_code":{"cf":"m", "col":"report_type_code", "type":"string"},
                 "report_type_description":{"cf":"m", "col":"report_type_description", "type":"string"},
                 "incident_number":{"cf":"m", "col":"incident_number", "type":"string"},
                 "police_district":{"cf":"m", "col":"police_district", "type":"string"},
-                "supervisor_district":{"cf":"m", "col":"supervisor_district", "type":"string"},
+                "supervisor_district":{"cf":"m", "col":"supervisor_district", "type":"string"}
               }  
     }""".split())
 
@@ -108,25 +103,22 @@ class IncidentModernContext(Context):
 
         # Select the relevant columns
         incidents_modern_df = incidents_modern_df.select(
-            incidents_modern_df["Row ID"].alias("row_id"),
-
+            string_to_hash("Row ID").alias("row_id"),
             incidents_modern_df["Incident Category"].alias("incident_category"),
-            incident_category_id("Incident Category").alias("incident_category_id"),
+            string_to_hash("Incident Category").alias("incident_category_id"),
             incidents_modern_df["Incident Subcategory"].alias("incident_subcategory"),
             unix_timestamp(to_timestamp("Incident Datetime", "yyyy/MM/dd hh:mm:ss a")).alias("incident_datetime"),
             unix_timestamp(to_timestamp("Report Datetime", "yyyy/MM/dd hh:mm:ss a")).alias("report_datetime"),
-            incidents_modern_df["Incident ID"].alias("incident_id"),  # Docs: Plain text, seems to contain numbers only
+            incidents_modern_df["Incident ID"].alias("incident_id"),
             incidents_modern_df["Resolution"].alias("resolution"),
-
             incidents_modern_df["Intersection"].alias("intersection"),
             incidents_modern_df["Latitude"].cast(DoubleType()).alias("latitude"),
             incidents_modern_df["Longitude"].cast(DoubleType()).alias("longitude"),
-
             incidents_modern_df["Report Type Code"].alias("report_type_code"),
             incidents_modern_df["Report Type Description"].alias("report_type_description"),
-            incidents_modern_df["Incident Number"].alias("incident_number"),  # Text, seems to contain numbers only
-            incidents_modern_df["Police District"].alias("police_district"),  # Text, seems to contain numbers only
-            incidents_modern_df["Supervisor District"].alias("supervisor_district"),
+            incidents_modern_df["Incident Number"].alias("incident_number"),
+            incidents_modern_df["Police District"].alias("police_district"),
+            incidents_modern_df["Supervisor District"].alias("supervisor_district")
         )
         incidents_modern_df.show(10, True)
 
@@ -137,17 +129,18 @@ class IncidentModernContext(Context):
             "cross"
         )
         incidents_modern_df = incidents_modern_df.drop("polygon")
-        incidents_modern_df = incidents_modern_df.withColumn("analysis_neighborhood_id", analysis_neighborhood_id(
+        incidents_modern_df = incidents_modern_df.withColumn("analysis_neighborhood_id", string_to_hash(
             incidents_modern_df["analysis_neighborhood"]))
         incidents_modern_df.show(10, True)
 
         return incidents_modern_df
 
 
-# TODO IMPLEMENT CONTEXT
-def load_hbase(self, session: SparkSession) -> DataFrame:
-    return session.read.options(catalog=self.__catalog).format(self._data_source_format).load()
+    def load_hbase(self, session: SparkSession) -> DataFrame:
+        print("LOAD_HBASE")
+        return session.read.options(catalog=self.__catalog).format(self._data_source_format).load()
 
 
-def save_hbase(self, df: DataFrame):
-    df.write.options(catalog=self.__catalog, newtable="5").format(self._data_source_format).save()
+    def save_hbase(self, df: DataFrame):
+         print("SAVE_HBASE")
+         df.write.options(catalog=self.__catalog, newtable="5").format(self._data_source_format).save()

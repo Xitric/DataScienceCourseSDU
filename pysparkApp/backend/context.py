@@ -7,7 +7,7 @@ class Context:
     def load_csv(self, session: SparkSession) -> DataFrame:
         pass
 
-    def load_hbase(self) -> DataFrame:
+    def load_hbase(self, session: SparkSession) -> DataFrame:
         pass
 
     def save_hbase(self, df: DataFrame):
