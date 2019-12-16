@@ -1,6 +1,7 @@
 from geo_pyspark.register import GeoSparkRegistrator
 from geo_pyspark.register import upload_jars
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, Window
+from pyspark.sql.functions import count, first
 
 from incident_historical_context import IncidentHistoricalContext
 from incident_modern_context import IncidentModernContext
@@ -85,15 +86,31 @@ if __name__ == "__main__":
     # context.save_hbase(df)
     # df.show(100, True)
 
-    print("*** FROM HBASE ***")
+    # From hbase
     load_df = context.load_hbase(spark)
-    load_df.show(100, False)
+    # load_df.show(100, False)
 
     # schema = load_df.schema
 
-    print("*** SORTED BY CATEGORY ID COUNT")
-    mfv_df = load_df.groupBy("category").count().sort("count", ascending=False)
-    mfv_df.show(100, False)
+    # most frequent crime in SF
+    mfs_df = load_df.groupBy("category").count().sort("count", ascending=False)
+    mfs_df.show(100, False)
+
+    # number of crimes incidents in each neighborhood
+    mfc_df = load_df.groupBy("neighborhood").count().sort("count", ascending=False)
+    mfc_df.show(100, False)
+
+    # most frequent crime in each neighborhood
+    # neighborhood, category, count
+    mfn_df = load_df
+    mfn_df = mfn_df.select("neighborhood", "category")
+
+    #mfn_df.over(Window.partitionBy("neighborhood", "category"))) \
+      #  .orderBy("count", ascending=False).groupBy("neighborhood").agg(first("neighborhood").alias("category"))
+   # mfn_df = mfn_df.withColumn("category", count("category").over(Window.partitionBy("neighborhood", "category"))) \
+       # .orderBy("count", ascending=False).groupBy("neighborhood").agg(first("neighborhood").alias("category"))
+
+    mfn_df.show(100, False)
 
     # @pandas_udf(schema, functionType=PandasUDFType.GROUPED_MAP)
     # def count_graffiti(df: pandas.DataFrame):
