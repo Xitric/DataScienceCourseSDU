@@ -142,52 +142,52 @@ services:
       cscourse:
         ipv4_address: 172.200.0.14
 
-  resourcemanager:
-    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.1.2-java8
-    container_name: resourcemanager
-    restart: on-failure
-    ports:
-      - 8088:8088
-    environment:
-      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864"
-    env_file:
-      - ./hadoop.env
-    networks:
-      cscourse:
-        ipv4_address: 172.200.0.20
+  # resourcemanager:
+  #   image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.1.2-java8
+  #   container_name: resourcemanager
+  #   restart: on-failure
+  #   ports:
+  #     - 8088:8088
+  #   environment:
+  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864"
+  #   env_file:
+  #     - ./hadoop.env
+  #   networks:
+  #     cscourse:
+  #       ipv4_address: 172.200.0.20
 
-  historyserver:
-    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.1.2-java8
-    container_name: historyserver
-    restart: on-failure
-    ports:
-      - 8188:8188
-    environment:
-      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
-    volumes:
-      - hadoop_historyserver:/hadoop/yarn/timeline
-    env_file:
-      - ./hadoop.env
-    networks:
-      cscourse:
-        ipv4_address: 172.200.0.21
+  # historyserver:
+  #   image: bde2020/hadoop-historyserver:2.0.0-hadoop3.1.2-java8
+  #   container_name: historyserver
+  #   restart: on-failure
+  #   ports:
+  #     - 8188:8188
+  #   environment:
+  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
+  #   volumes:
+  #     - hadoop_historyserver:/hadoop/yarn/timeline
+  #   env_file:
+  #     - ./hadoop.env
+  #   networks:
+  #     cscourse:
+  #       ipv4_address: 172.200.0.21
 
-  nodemanager:
-    image: nodemanager:latest
-    container_name: nodemanager
-    restart: on-failure
-    ports:
-      - 8042:8042
-    environment:
-      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
-    env_file:
-      - ./hadoop.env
-    networks:
-      cscourse:
-        ipv4_address: 172.200.0.22
+  # nodemanager:
+  #   image: xitric/nodemanager:latest
+  #   container_name: nodemanager
+  #   restart: on-failure
+  #   ports:
+  #     - 8042:8042
+  #   environment:
+  #     SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
+  #   env_file:
+  #     - ./hadoop.env
+  #   networks:
+  #     cscourse:
+  #       ipv4_address: 172.200.0.22
   
   # nodemanager2: #Node Orchestrator (for containers)
-  #   image: nodemanager:latest
+  #   image: xitric/nodemanager:latest
   #   container_name: nodemanager2
   #   restart: on-failure
   #   ports:
@@ -201,7 +201,7 @@ services:
   #       ipv4_address: 172.200.0.23
 
   # nodemanager3: #Node Orchestrator (for containers)
-  #   image: nodemanager:latest
+  #   image: xitric/nodemanager:latest
   #   container_name: nodemanager3
   #   restart: on-failure
   #   ports:
@@ -226,6 +226,19 @@ services:
   #     cscourse:
   #       ipv4_address: 172.200.0.30
 
+  livy:
+    image: xitric/livy:latest
+    container_name: livy
+    hostname: livy
+    restart: on-failure
+    env_file:
+      - ./hadoop.env
+    ports:
+      - 8998:8998
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.40
+
   mysql:
     image: xitric/sfdb:latest
     container_name: mysql
@@ -238,7 +251,7 @@ services:
       - 3306:3306
     networks:
       cscourse:
-        ipv4_address: 172.200.0.40
+        ipv4_address: 172.200.0.50
 
 networks:
   cscourse:

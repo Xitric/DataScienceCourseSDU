@@ -1,1 +1,0 @@
-docker build --rm -f "sparkClient\Dockerfile" -t sparkclient:latest "sparkClient" && docker run --rm --ip 172.200.0.56 -p 8080:8080 --hostname sparkclient --name sparkclient --network hadoop --env-file hadoop.env sparkclient:latest
