@@ -9,7 +9,6 @@ from service_case_context import ServiceCaseContext
 DATA_SOURCE_FORMAT = "org.apache.spark.sql.execution.datasources.hbase"
 NEIGHBORHOODS = ["Seacliff", "Lake Street", "Presidio National Park", "Presidio Terrace", "Inner Richmond",
                  "Sutro Heights", "Lincoln Park / Ft. Miley", "Outer Richmond", "Golden Gate Park", "Presidio Heights",
-                 "Laurel Heights / Jordan Park", "Lone Mountain", "Anza Vista", "Cow Hollow", "Union Street", "Nob Hill",
                  "Laurel Heights / Jordan Park", "Lone Mountain", "Anza Vista", "Cow Hollow", "Union Street",
                  "Nob Hill",
                  "Marina", "Telegraph Hill", "Downtown / Union Square", "Tenderloin", "Civic Center", "Hayes Valley",
@@ -80,15 +79,21 @@ if __name__ == "__main__":
 
     GeoSparkRegistrator.registerAll(spark)
 
-    context = IncidentModernContext()
-    df = context.load_csv(spark)
-    context.save_hbase(df)
-    df.show(100, True)
+    # context = ServiceCaseContext()
+    context = IncidentHistoricalContext()
+    # df = context.load_csv(spark).limit(10)
+    # context.save_hbase(df)
+    # df.show(100, True)
+
+    print("*** FROM HBASE ***")
     load_df = context.load_hbase(spark)
     load_df.show(100, False)
 
-
     # schema = load_df.schema
+
+    print("*** SORTED BY CATEGORY ID COUNT")
+    mfv_df = load_df.groupBy("category").count().sort("count", ascending=False)
+    mfv_df.show(100, False)
 
     # @pandas_udf(schema, functionType=PandasUDFType.GROUPED_MAP)
     # def count_graffiti(df: pandas.DataFrame):
@@ -96,16 +101,8 @@ if __name__ == "__main__":
     #     count = df.where((df["category_id"] == CATEGORIES.index("Graffiti"))).count()
     #     return pandas.DataFrame([neighborhood] + [count])
 
-
-    #print(load_df.count())
+    # print(load_df.count())
     # load_df.where((load_df["category_id"] == (hash(CATEGORIES[0]) & 0xffffffff))) \
     #     .groupBy(load_df["neighborhood_id"]) \
     #     .agg(count(lit(1)).alias("sidewalk_cleaning")) \
     #     .show(200, False)
-
-    # load_df.where((load_df["neighborhood_id"] < 5) & (load_df["category_id"] == CATEGORIES.index("Graffiti"))) \
-    #     .groupBy(load_df["neighborhood_id"]) \
-    #     .apply(count_graffiti) \
-    #     .show(10, False)
-    # print(load_df.count())
-
