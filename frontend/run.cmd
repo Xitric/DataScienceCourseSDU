@@ -1,0 +1,1 @@
+docker build --rm -f "frontend\Dockerfile" -t frontend:latest frontend && docker run --rm --ip 172.200.0.56 -p 3000:3000 --hostname frontend --name frontend --network hadoop frontend:latest
