@@ -56,7 +56,8 @@ class IncidentModernContext(Context):
             .option("multiline", "true") \
             .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS") \
             .load(self.incident_modern_file) \
- \
+            .limit(10)
+
         # Remove rows missing category or location information
         incidents_df = incidents_df.where(
             incidents_df["Incident Category"].isNotNull() &
@@ -98,9 +99,8 @@ class IncidentModernContext(Context):
 
         return incidents_df
 
-    # TODO
     def load_flume(self, ssc: StreamingContext) -> DStream:
-       pass
+        pass  # TODO
 
     def load_hbase(self, session: SparkSession) -> DataFrame:
         return session.read.options(catalog=self.__catalog).format(self._data_source_format).load()

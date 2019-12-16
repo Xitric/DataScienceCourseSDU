@@ -2,7 +2,9 @@ from geo_pyspark.register import GeoSparkRegistrator
 from geo_pyspark.register import upload_jars
 from pyspark.sql import SparkSession
 
+from incident_historical_context import IncidentHistoricalContext
 from incident_modern_context import IncidentModernContext
+from service_case_context import ServiceCaseContext
 
 DATA_SOURCE_FORMAT = "org.apache.spark.sql.execution.datasources.hbase"
 NEIGHBORHOODS = ["Seacliff", "Lake Street", "Presidio National Park", "Presidio Terrace", "Inner Richmond",
@@ -67,9 +69,6 @@ CATEGORIES = ["Street and Sidewalk Cleaning", "Graffiti", "Abandoned Vehicle", "
 
 if __name__ == "__main__":
     # SparkContext is old tech! Therefore we use the modern SparkSession
-    
-    #upload_jars()
-
     spark = SparkSession.builder \
         .master("local") \
         .config('spark.driver.host', '172.200.0.55') \
