@@ -17,14 +17,13 @@ RUN make altinstall
 WORKDIR /
 ENV PATH="/usr/bin/python:$PATH"
 
-# TODO: Install dependencies
-# # Install Python packages
-# WORKDIR /
-# # RUN python3.7 -m pip install --upgrade pip
-# # RUN python3.7 -m pip install shapely
-# # RUN python3.7 -m pip install pandas
-# # RUN python3.7 -m pip install wheel
-# # COPY geo_pyspark-0.2.0-py3-none-any.whl /
-# # RUN python3.7 -m pip install geo_pyspark-0.2.0-py3-none-any.whl
-# # RUN apt-get autoremove -y
-# # RUN apt-get clean
+# Install Python packages
+WORKDIR /
+RUN python3.7 -m pip install --upgrade pip
+RUN python3.7 -m pip install shapely
+RUN python3.7 -m pip install pandas
+RUN python3.7 -m pip install wheel
+COPY geo_pyspark-0.2.0-py3-none-any.whl /
+RUN python3.7 -m pip install geo_pyspark-0.2.0-py3-none-any.whl
+RUN apt-get autoremove -y
+RUN apt-get clean

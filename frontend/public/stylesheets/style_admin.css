@@ -1,0 +1,15 @@
+#adminContainer {
+    padding: 16px;
+}
+
+.dashboardCard {
+    margin-bottom: 16px;
+}
+
+.dashboardCardHead {
+    text-align: left;
+}
+
+.dashboardCardHead p {
+    margin: 8px;
+}
