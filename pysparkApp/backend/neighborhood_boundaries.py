@@ -3,31 +3,29 @@ import os
 from geo_pyspark.sql.types import GeometryType
 from pyspark.sql import DataFrame, session, SparkSession
 from pyspark.sql.functions import udf
-from pyspark.sql.types import BooleanType
+from pyspark.sql.types import BooleanType, ArrayType, FloatType
 from shapely.geometry import Polygon, Point
 
 # True if the latitude and longitude is in the neighborhood represented as a Polygon
 is_neighborhood_in_polygon = udf(
     lambda latitude, longitude, polygon_object:
-    polygon_object.contains(Point(float(latitude), float(longitude))),
+    Polygon(polygon_object).contains(Point(float(latitude), float(longitude))),
     BooleanType()
 )
 
-polygon = udf(
-    lambda neighborhood_boundary_string: create_polygon(neighborhood_boundary_string), GeometryType()
-)
-
-
 # Create and return an array of points based on the neighborhood boundary string
-def create_polygon(neighborhood_boundary_string) -> Polygon:
+def create_polygon(neighborhood_boundary_string):
     neighborhood_boundary = neighborhood_boundary_string[16:-3]
     points_with_spaces = neighborhood_boundary.split(", ")
     points = []
     for point in points_with_spaces:
         coordinates = point.split(" ")
         points.append(Point(float(coordinates[1]), float(coordinates[0])))
-    return Polygon([[p.x, p.y] for p in points])
+    return [[p.x, p.y] for p in points]
 
+polygon = udf(
+    create_polygon, ArrayType(ArrayType(FloatType()))
+)
 
 # Read the neighborhood file from HDFS and create polygons based on the neighborhood boundaries
 def neighborhood_boundaries(spark: SparkSession) -> DataFrame:
@@ -39,3 +37,4 @@ def neighborhood_boundaries(spark: SparkSession) -> DataFrame:
         sf_boundaries_df["name"].alias("neighborhood")
     )
     return sf_boundaries_df
+

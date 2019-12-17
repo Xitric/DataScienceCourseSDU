@@ -78,39 +78,48 @@ if __name__ == "__main__":
         .appName("SfDataImporter") \
         .getOrCreate()
 
+    spark.sparkContext.setLogLevel("WARN")
+    spark.sparkContext.setCheckpointDir("_checkpoint")
     GeoSparkRegistrator.registerAll(spark)
 
-    # context = ServiceCaseContext()
     context = IncidentHistoricalContext()
-    # df = context.load_csv(spark).limit(10)
-    # context.save_hbase(df)
-    # df.show(100, True)
 
-    # From hbase
-    load_df = context.load_hbase(spark)
-    # load_df.show(100, False)
+    import datetime
 
-    # schema = load_df.schema
+    a = datetime.datetime.now()
+    df = context.load_csv(spark).limit(10)
+    df.show(10, True)
+    b = datetime.datetime.now()
+    delta = b - a
+    print("total time: ")
+    print(delta)
 
-    # most frequent crime in SF
-    mfs_df = load_df.groupBy("category").count().sort("count", ascending=False)
-    mfs_df.show(100, False)
 
-    # number of crimes incidents in each neighborhood
-    mfc_df = load_df.groupBy("neighborhood").count().sort("count", ascending=False)
-    mfc_df.show(100, False)
+  #  context.save_hbase(df)
+
+    #load_df = context.load_hbase(spark)
+
+    # # most frequent crimes in SF
+    # mfs_df = load_df.groupBy("category").count().sort("count", ascending=False).limit(5)
+    # mfs_df.show(100, False)
+    #
+    # # number of crimes incidents in each neighborhood
+    # mfc_df = load_df.groupBy("neighborhood").count().sort("count", ascending=False).limit(5)
+    # mfc_df.show(100, False)
 
     # most frequent crime in each neighborhood
     # neighborhood, category, count
-    mfn_df = load_df
-    mfn_df = mfn_df.select("neighborhood", "category")
+    # Select key som tuple med (n, c) og tæl dem, derefter sorter dem med count().sort
+    #mfn_df = load_df
+  #  mfn_df = mfn_df.groupBy("neighborhood", "category").count().distinct()
+    # mfn_df = mfn_df.groupBy(["neighborhood", "category"]).count().sort("count", ascending=False)
+    # mfn_df = mfn_df.stat.crosstab("neighborhood", "category", "count")
 
-    #mfn_df.over(Window.partitionBy("neighborhood", "category"))) \
-      #  .orderBy("count", ascending=False).groupBy("neighborhood").agg(first("neighborhood").alias("category"))
-   # mfn_df = mfn_df.withColumn("category", count("category").over(Window.partitionBy("neighborhood", "category"))) \
-       # .orderBy("count", ascending=False).groupBy("neighborhood").agg(first("neighborhood").alias("category"))
+   # mfn_df = mfn_df.groupBy("neighborhood", "category").agg(count("*"))
 
-    mfn_df.show(100, False)
+
+
+    #mfn_df.show(100, False)
 
     # @pandas_udf(schema, functionType=PandasUDFType.GROUPED_MAP)
     # def count_graffiti(df: pandas.DataFrame):

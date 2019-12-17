@@ -50,7 +50,8 @@ class IncidentHistoricalContext(Context):
             .option("multiline", "true") \
             .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS") \
             .load(self.incident_modern_file) \
- \
+            .limit(10)
+
         # Remove rows missing category or location information
         df = df.where(df["Category"].isNotNull() & df["X"].isNotNull() & df["Y"].isNotNull())
 
@@ -71,6 +72,9 @@ class IncidentHistoricalContext(Context):
         )
 
         neighborhood_boundaries_df = neighborhood_boundaries(spark)
+
+        df = df.checkpoint(eager=True)
+        neighborhood_boundaries_df = neighborhood_boundaries_df.checkpoint(eager=True)
 
         # Join df and neighborhood_boundaries_df if latitude and longitude is in the polygon
         df = df.join(
