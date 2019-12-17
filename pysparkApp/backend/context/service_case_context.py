@@ -1,24 +1,22 @@
+import json
 import os
 
-from context import Context
-from neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
-from string_hasher import string_hash
+from pyspark import RDD
 from pyspark.sql import SparkSession, DataFrame, Row
 from pyspark.sql.functions import udf, unix_timestamp, to_timestamp
 from pyspark.sql.types import IntegerType, DoubleType
 from pyspark.streaming import StreamingContext, DStream
 from pyspark.streaming.flume import FlumeUtils
-from pyspark import RDD
-import json
+
+from context.context import Context
+from util.neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
+from util.spark_session_utils import get_spark_session_instance
+from util.string_hasher import string_hash
 
 # User defined function for calculating category and neighborhood numbers
-category_id = udf(
+hasher = udf(
     lambda category_str: string_hash(category_str),  # Conversion function
     IntegerType()  # Return type
-)
-neighborhood_id = udf(
-    lambda neighborhood_str: string_hash(neighborhood_str),
-    IntegerType()
 )
 
 
@@ -30,7 +28,7 @@ class ServiceCaseContext(Context):
     __file = os.environ["CORE_CONF_fs_defaultFS"] + "/datasets/311_Cases.csv"
 
     # The host to which Flume ingests data
-    __flume_host = "pyspark"
+    __flume_host = "livy"
 
     # The port at which Flume ingests service cases
     __flume_port = 4000
@@ -89,7 +87,7 @@ class ServiceCaseContext(Context):
         df = df.select(unix_timestamp(to_timestamp("Opened", "MM/dd/yyyy hh:mm:ss a")).alias("opened"),
                        df["Status Notes"].alias("status_notes"),
                        df["Category"].alias("category"),
-                       category_id("Category").alias("category_id"),
+                       hasher("Category").alias("category_id"),
                        df["Request Type"].alias("request_type"),
                        df["Request Details"].alias("request_details"),
                        df["Address"].alias("address"),
@@ -112,7 +110,7 @@ class ServiceCaseContext(Context):
         )
 
         df = df.drop("polygon")
-        df = df.withColumn("neighborhood_id", neighborhood_id(df["neighborhood"]))
+        df = df.withColumn("neighborhood_id", hasher(df["neighborhood"]))
 
         return df
 
@@ -132,7 +130,6 @@ class ServiceCaseContext(Context):
                    category=data_dict.get("service_name", ""),
                    request_type=data_dict.get("service_subtype", ""),
                    request_details=data_dict.get("service_details", ""),
-                   neighborhood=data_dict.get("neighborhoods_sffind_boundaries", ""),
                    address=data_dict.get("address", ""),
                    street=data_dict.get("street", ""),
                    latitude=float(data_dict.get("lat", "0")),
@@ -149,11 +146,27 @@ class ServiceCaseContext(Context):
     def __convert_service_format(rdd: RDD) -> RDD:
         if rdd.isEmpty():
             return rdd
-
         df = rdd.toDF()
 
-        df = df.withColumn("category_id", category_id("Category")) \
-            .withColumn("neighborhood_id", neighborhood_id("Neighborhood")) \
+        # Since this method is invoked from a nested context where the SparkSession is not available, we must obtain it
+        # by other means
+        spark = get_spark_session_instance(rdd.context.getConf())
+        neighborhood_boundaries_df = neighborhood_boundaries(spark)
+
+        # Find neighborhoods from lat/lon
+        # This is necessary, because a lot of the data from the API is missing neighborhood data
+        df = df.join(
+            neighborhood_boundaries_df,
+            is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
+            "cross"
+        )
+
+        # Clean up after join
+        df = df.drop("polygon")
+
+        # Add key data and parse dates
+        df = df.withColumn("category_id", hasher("category")) \
+            .withColumn("neighborhood_id", hasher("neighborhood")) \
             .withColumn("opened", unix_timestamp(to_timestamp("openedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS"))) \
             .withColumn("updated", unix_timestamp(to_timestamp("updatedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS"))) \
             .drop("openedStr", "updatedStr")

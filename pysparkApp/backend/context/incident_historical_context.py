@@ -5,9 +5,9 @@ from pyspark.sql.functions import udf, unix_timestamp
 from pyspark.sql.types import IntegerType, DoubleType, LongType
 from pyspark.streaming import StreamingContext, DStream
 
-from context import Context
-from neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
-from string_hasher import string_hash
+from context.context import Context
+from util.neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
+from util.string_hasher import string_hash
 
 string_to_hash = udf(
     lambda string: string_hash(string),
@@ -49,13 +49,12 @@ class IncidentHistoricalContext(Context):
             .option("header", "true") \
             .option("multiline", "true") \
             .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS") \
-            .load(self.incident_modern_file) \
- \
+            .load(self.incident_modern_file)
+
         # Remove rows missing category or location information
         df = df.where(df["Category"].isNotNull() & df["X"].isNotNull() & df["Y"].isNotNull())
 
         df = df.select(
-
             df["PdId"].cast(LongType()).alias("pd_id"),
             df["Category"].alias("category"),
             string_to_hash("Category").alias("category_id"),

@@ -9,6 +9,7 @@ pysparkApp/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar
 pysparkApp/backend/build/
 pysparkApp/backend/dist/
 pysparkApp/backend/*.egg-info/
+pysparkApp/backend/files.zip
 
 *.csv
 *.iml

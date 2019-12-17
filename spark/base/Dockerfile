@@ -5,7 +5,7 @@ LABEL Name=spark Version=1.0.0
 # Install Python
 ENV PYTHON_VERSION 3.7.5
 RUN apt-get update && apt-get -yq install locales build-essential checkinstall
-RUN apt-get -yq install libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev
+RUN apt-get -yq install libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev liblzma-dev
 
 RUN curl -O https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz && \
     mkdir -p /usr/bin/python && \
