@@ -1,7 +1,7 @@
 from geo_pyspark.register import GeoSparkRegistrator
 from pyspark.sql import SparkSession
 
-from incident_historical_context import IncidentHistoricalContext
+from context.incident_historical_context import IncidentHistoricalContext
 
 DATA_SOURCE_FORMAT = "org.apache.spark.sql.execution.datasources.hbase"
 NEIGHBORHOODS = ["Seacliff", "Lake Street", "Presidio National Park", "Presidio Terrace", "Inner Richmond",

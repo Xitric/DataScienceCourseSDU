@@ -8,10 +8,10 @@ from pyspark.sql.types import IntegerType, DoubleType
 from pyspark.streaming import StreamingContext, DStream
 from pyspark.streaming.flume import FlumeUtils
 
-from context import Context
-from neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
-from spark_session_utils import get_spark_session_instance
-from string_hasher import string_hash
+from context.context import Context
+from util.neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
+from util.spark_session_utils import get_spark_session_instance
+from util.string_hasher import string_hash
 
 # User defined function for calculating category and neighborhood numbers
 hasher = udf(

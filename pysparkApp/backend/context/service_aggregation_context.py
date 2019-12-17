@@ -1,6 +1,6 @@
 from pyspark.sql import DataFrame, SparkSession
 
-from context import Context
+from context.context import Context
 
 
 class ServiceAggregationContext(Context):

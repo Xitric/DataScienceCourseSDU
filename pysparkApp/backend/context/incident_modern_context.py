@@ -5,9 +5,9 @@ from pyspark.sql.functions import udf, unix_timestamp
 from pyspark.sql.types import DoubleType, IntegerType
 from pyspark.streaming import StreamingContext, DStream
 
-from context import Context
-from neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
-from string_hasher import string_hash
+from context.context import Context
+from util.neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
+from util.string_hasher import string_hash
 
 string_to_hash = udf(
     lambda string: string_hash(string),

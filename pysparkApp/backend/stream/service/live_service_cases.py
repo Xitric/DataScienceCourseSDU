@@ -8,9 +8,9 @@ from pyspark.sql.functions import unix_timestamp, udf
 from pyspark.sql.types import IntegerType
 from pyspark.streaming import StreamingContext
 
-from service_aggregation_context import ServiceAggregationContext
-from service_case_context import ServiceCaseContext
-from string_hasher import string_hash
+from context.service_aggregation_context import ServiceAggregationContext
+from context.service_case_context import ServiceCaseContext
+from util.string_hasher import string_hash
 
 if os.path.exists('jobs.zip'):
     sys.path.insert(0, 'jobs.zip')
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     spark = SparkSession.builder.getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
     GeoSparkRegistrator.registerAll(spark)
-    ssc = StreamingContext(spark.sparkContext, 10)  # Check for new data every 10 seconds
+    ssc = StreamingContext(spark.sparkContext, 1)  # Check for new data every 10 seconds
     ssc.checkpoint("_checkpoint")
 
     service_context = ServiceCaseContext()
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         .map(lambda row: (row, 1)) \
         .reduceByKeyAndWindow(lambda agg, new: agg + new,
                               lambda agg, old: agg - old,
-                              900, 900) \
+                              1, 1) \
         .transform(lambda time, rdd:
                    rdd.map(lambda row: (row[0][0], row[0][1], time, row[1])))
 

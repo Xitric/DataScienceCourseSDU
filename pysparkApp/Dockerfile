@@ -1,9 +1,13 @@
 FROM spark-executor:latest
 
+RUN apt-get update && apt-get -yq install zip
+
 # Enable local HBase connectivity
 WORKDIR /backend
 COPY shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar .
 COPY /backend .
+
+RUN zip files.zip *
 
 # Remove if we create another container for Spark streaming
 EXPOSE 4000

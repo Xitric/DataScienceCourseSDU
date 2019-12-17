@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 
-from service_aggregation_context import ServiceAggregationContext
+from context.service_aggregation_context import ServiceAggregationContext
 
 if __name__ == "__main__":
     spark = SparkSession.builder.getOrCreate()
@@ -11,6 +11,7 @@ if __name__ == "__main__":
 
     df.show(10, False)
 
+    # TODO: Aggregates
     # Query the past 4 weeks
     # since = datetime.now() - timedelta(weeks=4)
     # since_seconds = int(since.timestamp())
