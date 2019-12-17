@@ -44,8 +44,9 @@ if __name__ == "__main__":
     service_context = ServiceCaseContext()
     dStream = service_context.load_flume(ssc)
 
-    # Save raw data to HBase for batch analysis
+    # Save raw data to HBase for later batch analysis
     dStream.foreachRDD(lambda rdd: save_to_hbase(rdd, service_context))
+    dStream.pprint()
 
     # Convert to format for counting service cases
     neighborhood_category_stream = dStream.map(lambda row: (row.neighborhood, row.category))
@@ -67,45 +68,3 @@ if __name__ == "__main__":
     ssc.start()
     ssc.awaitTerminationOrTimeout(80)
     ssc.stop(stopSparkContext=True, stopGraceFully=True)
-
-    # Previous attempts
-    # neighborhood_category_stream.map(lambda row: (row, 1)) \
-    #     .updateStateByKey(lambda new, running: sum(new, running or 0)) \
-    #     .window(5, 1) \
-    #     .map(lambda row: (row[0], row[1] / 10)) \
-    #     .pprint()
-
-    # neighborhood_category_stream.countByValueAndWindow(5, 1) \
-    #     .updateStateByKey(lambda new, running: sum(new)) \
-    #     .map(lambda row: (row[0], row[1] / 10)) \
-    #     .pprint()
-
-    # neighborhood_category_stream.countByValueAndWindow(5, 1) \
-    #     .map(lambda row: (row[0], row[1] / 10)) \
-    #     .pprint()
-
-    # neighborhood_category_stream \
-    #     .transform(lambda time, rdd:
-    #                rdd.map(lambda row: ((row[0], row[1], time), 1))) \
-    #     .reduceByKey(lambda running, new: running + new) \
-    #     .pprint()
-
-    # Test data
-    # neighborhood_category_stream = ssc.queueStream([
-    #     spark.sparkContext.parallelize([("NB1", "Service 1"), ("NB1", "Service 2"), ("NB2", "Service 1")]),
-    #     spark.sparkContext.parallelize([("NB2", "Service 2"), ("NB1", "Service 1"), ("NB2", "Service 1")]),
-    #     spark.sparkContext.parallelize([("NB3", "Service 1"), ("NB2", "Service 2"), ("NB3", "Service 2")]),
-    #     spark.sparkContext.parallelize([("NB2", "Service 2"), ("NB3", "Service 3"), ("NB3", "Service 3")]),
-    #     spark.sparkContext.parallelize([("NB1", "Service 3"), ("NB1", "Service 1"), ("NB2", "Service 1")]),
-    #     spark.sparkContext.parallelize([("NB1", "Service 1"), ("NB1", "Service 2"), ("NB2", "Service 1")]),
-    #     spark.sparkContext.parallelize([("NB2", "Service 2"), ("NB1", "Service 1"), ("NB2", "Service 1")]),
-    #     spark.sparkContext.parallelize([("NB3", "Service 1"), ("NB2", "Service 2"), ("NB3", "Service 2")]),
-    #     spark.sparkContext.parallelize([("NB2", "Service 2"), ("NB3", "Service 3"), ("NB3", "Service 3")]),
-    #     spark.sparkContext.parallelize([("NB1", "Service 3"), ("NB1", "Service 1"), ("NB2", "Service 1")]),
-    #     spark.sparkContext.parallelize([("NB1", "Service 1"), ("NB1", "Service 2"), ("NB2", "Service 1")]),
-    #     spark.sparkContext.parallelize([("NB2", "Service 2"), ("NB1", "Service 1"), ("NB2", "Service 1")]),
-    #     spark.sparkContext.parallelize([("NB3", "Service 1"), ("NB2", "Service 2"), ("NB3", "Service 2")]),
-    #     spark.sparkContext.parallelize([("NB2", "Service 2"), ("NB3", "Service 3"), ("NB3", "Service 3")]),
-    #     spark.sparkContext.parallelize([("NB1", "Service 3"), ("NB1", "Service 1"), ("NB2", "Service 1")])
-    # ], oneAtATime=True,
-    #     default=spark.sparkContext.parallelize([("NB1", "Service 3"), ("NB1", "Service 1"), ("NB2", "Service 1")]))
