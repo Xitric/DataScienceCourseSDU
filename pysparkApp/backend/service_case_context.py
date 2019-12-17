@@ -1,9 +1,10 @@
 import os
 
 from context import Context
+from neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
 from string_hasher import string_hash
 from pyspark.sql import SparkSession, DataFrame, Row
-from pyspark.sql.functions import udf, length, unix_timestamp, to_timestamp
+from pyspark.sql.functions import udf, unix_timestamp, to_timestamp
 from pyspark.sql.types import IntegerType, DoubleType
 from pyspark.streaming import StreamingContext, DStream
 from pyspark.streaming.flume import FlumeUtils
@@ -80,8 +81,8 @@ class ServiceCaseContext(Context):
 
         # Remove rows missing category or location information
         # Some neighborhood names were simply numbers...
-        df = df.where(df["Category"].isNotNull() & df["Neighborhood"].isNotNull() &
-                      (length(df["Neighborhood"]) > 1) & (length(df["Category"]) > 1))
+        df = df.where(df["Category"].isNotNull() & df["Neighborhood"].isNotNull() & df["Latitude"].isNotNull() &
+                      df["Longitude"].isNotNull())
 
         # Select useful columns and rename them
         # We also convert timestamp strings into seconds since epoch and prepare some columns for our row keys
@@ -91,8 +92,6 @@ class ServiceCaseContext(Context):
                        category_id("Category").alias("category_id"),
                        df["Request Type"].alias("request_type"),
                        df["Request Details"].alias("request_details"),
-                       df["Neighborhood"].alias("neighborhood"),
-                       neighborhood_id("Neighborhood").alias("neighborhood_id"),
                        df["Address"].alias("address"),
                        df["Street"].alias("street"),
                        df["Latitude"].cast(DoubleType()).alias("latitude"),
@@ -104,6 +103,17 @@ class ServiceCaseContext(Context):
                        unix_timestamp(to_timestamp("Updated", "MM/dd/yyyy hh:mm:ss a")).alias("updated"),
                        df["Status"].alias("status"),
                        df["CaseID"].cast(IntegerType()).alias("case_id"))
+
+        neighborhood_boundaries_df = neighborhood_boundaries(spark)
+        df = df.join(
+            neighborhood_boundaries_df,
+            is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
+            "cross"
+        )
+
+        df = df.drop("polygon")
+        df = df.withColumn("neighborhood_id", neighborhood_id(df["neighborhood"]))
+
         return df
 
     def load_flume(self, ssc: StreamingContext) -> DStream:
@@ -142,7 +152,6 @@ class ServiceCaseContext(Context):
 
         df = rdd.toDF()
 
-        # TODO: Find neighborhood from lat/lon
         df = df.withColumn("category_id", category_id("Category")) \
             .withColumn("neighborhood_id", neighborhood_id("Neighborhood")) \
             .withColumn("opened", unix_timestamp(to_timestamp("openedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS"))) \

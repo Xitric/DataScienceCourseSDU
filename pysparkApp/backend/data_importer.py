@@ -1,13 +1,15 @@
 from geo_pyspark.register import GeoSparkRegistrator
 from geo_pyspark.register import upload_jars
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, Window
+from pyspark.sql.functions import count, first
 
+from incident_historical_context import IncidentHistoricalContext
 from incident_modern_context import IncidentModernContext
+from service_case_context import ServiceCaseContext
 
 DATA_SOURCE_FORMAT = "org.apache.spark.sql.execution.datasources.hbase"
 NEIGHBORHOODS = ["Seacliff", "Lake Street", "Presidio National Park", "Presidio Terrace", "Inner Richmond",
                  "Sutro Heights", "Lincoln Park / Ft. Miley", "Outer Richmond", "Golden Gate Park", "Presidio Heights",
-                 "Laurel Heights / Jordan Park", "Lone Mountain", "Anza Vista", "Cow Hollow", "Union Street", "Nob Hill",
                  "Laurel Heights / Jordan Park", "Lone Mountain", "Anza Vista", "Cow Hollow", "Union Street",
                  "Nob Hill",
                  "Marina", "Telegraph Hill", "Downtown / Union Square", "Tenderloin", "Civic Center", "Hayes Valley",
@@ -67,9 +69,6 @@ CATEGORIES = ["Street and Sidewalk Cleaning", "Graffiti", "Abandoned Vehicle", "
 
 if __name__ == "__main__":
     # SparkContext is old tech! Therefore we use the modern SparkSession
-    
-    #upload_jars()
-
     spark = SparkSession.builder \
         .master("local") \
         .config('spark.driver.host', '172.200.0.55') \
@@ -81,15 +80,37 @@ if __name__ == "__main__":
 
     GeoSparkRegistrator.registerAll(spark)
 
-    context = IncidentModernContext()
-    df = context.load_csv(spark)
-    context.save_hbase(df)
-    df.show(100, True)
-    load_df = context.load_hbase(spark)
-    load_df.show(100, False)
+    # context = ServiceCaseContext()
+    context = IncidentHistoricalContext()
+    # df = context.load_csv(spark).limit(10)
+    # context.save_hbase(df)
+    # df.show(100, True)
 
+    # From hbase
+    load_df = context.load_hbase(spark)
+    # load_df.show(100, False)
 
     # schema = load_df.schema
+
+    # most frequent crime in SF
+    mfs_df = load_df.groupBy("category").count().sort("count", ascending=False)
+    mfs_df.show(100, False)
+
+    # number of crimes incidents in each neighborhood
+    mfc_df = load_df.groupBy("neighborhood").count().sort("count", ascending=False)
+    mfc_df.show(100, False)
+
+    # most frequent crime in each neighborhood
+    # neighborhood, category, count
+    mfn_df = load_df
+    mfn_df = mfn_df.select("neighborhood", "category")
+
+    #mfn_df.over(Window.partitionBy("neighborhood", "category"))) \
+      #  .orderBy("count", ascending=False).groupBy("neighborhood").agg(first("neighborhood").alias("category"))
+   # mfn_df = mfn_df.withColumn("category", count("category").over(Window.partitionBy("neighborhood", "category"))) \
+       # .orderBy("count", ascending=False).groupBy("neighborhood").agg(first("neighborhood").alias("category"))
+
+    mfn_df.show(100, False)
 
     # @pandas_udf(schema, functionType=PandasUDFType.GROUPED_MAP)
     # def count_graffiti(df: pandas.DataFrame):
@@ -97,16 +118,8 @@ if __name__ == "__main__":
     #     count = df.where((df["category_id"] == CATEGORIES.index("Graffiti"))).count()
     #     return pandas.DataFrame([neighborhood] + [count])
 
-
-    #print(load_df.count())
+    # print(load_df.count())
     # load_df.where((load_df["category_id"] == (hash(CATEGORIES[0]) & 0xffffffff))) \
     #     .groupBy(load_df["neighborhood_id"]) \
     #     .agg(count(lit(1)).alias("sidewalk_cleaning")) \
     #     .show(200, False)
-
-    # load_df.where((load_df["neighborhood_id"] < 5) & (load_df["category_id"] == CATEGORIES.index("Graffiti"))) \
-    #     .groupBy(load_df["neighborhood_id"]) \
-    #     .apply(count_graffiti) \
-    #     .show(10, False)
-    # print(load_df.count())
-
