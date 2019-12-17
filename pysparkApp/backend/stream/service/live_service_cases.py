@@ -8,7 +8,7 @@ from pyspark.sql.functions import unix_timestamp, udf
 from pyspark.sql.types import IntegerType
 from pyspark.streaming import StreamingContext
 
-from context.service_aggregation_context import ServiceAggregationContext
+from context.service_running_aggregation_context import ServiceRunningAggregationContext
 from context.service_case_context import ServiceCaseContext
 from util.string_hasher import string_hash
 
@@ -21,7 +21,7 @@ def save_to_hbase(rdd: RDD, ctx: ServiceCaseContext):
         ctx.save_hbase(rdd.toDF())
 
 
-def save_aggregation(rdd: RDD, ctx: ServiceAggregationContext):
+def save_aggregation(rdd: RDD, ctx: ServiceRunningAggregationContext):
     if not rdd.isEmpty():
         df = rdd.toDF()
         df = df.select(df["_1"].alias("neighborhood"),
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     spark = SparkSession.builder.getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
     GeoSparkRegistrator.registerAll(spark)
-    ssc = StreamingContext(spark.sparkContext, 1)  # Check for new data every 10 seconds
+    ssc = StreamingContext(spark.sparkContext, 10)  # Check for new data every 10 seconds
     ssc.checkpoint("_checkpoint")
 
     service_context = ServiceCaseContext()
@@ -59,6 +59,7 @@ if __name__ == "__main__":
     # Convert to format for counting service cases
     neighborhood_category_stream = dStream.map(lambda row: (row.neighborhood, row.category))
 
+    # TODO: Change window parameters to 15 minutes (900, 900)
     # Count service cases
     # Since time is seconds, we calculate aggregates over a 15 minute duration every 15 minutes
     # This pre-processing lowers the strain on the batch queries
@@ -66,11 +67,11 @@ if __name__ == "__main__":
         .map(lambda row: (row, 1)) \
         .reduceByKeyAndWindow(lambda agg, new: agg + new,
                               lambda agg, old: agg - old,
-                              1, 1) \
+                              60, 60) \
         .transform(lambda time, rdd:
                    rdd.map(lambda row: (row[0][0], row[0][1], time, row[1])))
 
-    aggregation_context = ServiceAggregationContext()
+    aggregation_context = ServiceRunningAggregationContext()
     five_minute_aggregate_stream.foreachRDD(lambda rdd: save_aggregation(rdd, aggregation_context))
 
     ssc.start()

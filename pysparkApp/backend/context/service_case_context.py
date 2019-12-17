@@ -90,6 +90,8 @@ class ServiceCaseContext(Context):
                        hasher("Category").alias("category_id"),
                        df["Request Type"].alias("request_type"),
                        df["Request Details"].alias("request_details"),
+                       df["Neighborhood"].alias("neighborhood"),
+                       hasher("Neighborhood").alias("neighborhood_id"),
                        df["Address"].alias("address"),
                        df["Street"].alias("street"),
                        df["Latitude"].cast(DoubleType()).alias("latitude"),
@@ -102,15 +104,16 @@ class ServiceCaseContext(Context):
                        df["Status"].alias("status"),
                        df["CaseID"].cast(IntegerType()).alias("case_id"))
 
-        neighborhood_boundaries_df = neighborhood_boundaries(spark)
-        df = df.join(
-            neighborhood_boundaries_df,
-            is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
-            "cross"
-        )
-
-        df = df.drop("polygon")
-        df = df.withColumn("neighborhood_id", hasher(df["neighborhood"]))
+        # This would be optimal to include, but we do not have the processing power it requires!
+        # neighborhood_boundaries_df = neighborhood_boundaries(spark)
+        # df = df.join(
+        #     neighborhood_boundaries_df,
+        #     is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
+        #     "cross"
+        # )
+        #
+        # df = df.drop("polygon")
+        # df = df.withColumn("neighborhood_id", hasher(df["neighborhood"]))
 
         return df
 
