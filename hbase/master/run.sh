@@ -1,3 +1,3 @@
 #!/bin/bash
-
-/opt/hbase-$HBASE_VERSION/bin/hbase master start
+hbase-daemon.sh start rest -p 8080
+hbase master start
