@@ -3,7 +3,7 @@ const request = require('request');
 class LivyClient {
 
     constructor() {
-        this.baseUrl = "http://localhost:8998";
+        this.baseUrl = "http://livy:8998";
     }
 
     batchSubmit(name, version, onComplete) {
@@ -11,9 +11,21 @@ class LivyClient {
             url: this.baseUrl + "/batches",
             method: "POST",
             json: {
-                jars: ["hdfs://namenode:9000/apps/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar"],
-                pyFiles: ["hdfs://namenode:9000/apps/" + name + "-" + version + "-py3.7.egg"],
-                file: "hdfs://namenode:9000/apps/driver.py"
+                jars: [
+                    "hdfs://namenode:9000/apps/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar"
+                ],
+                pyFiles: [
+                    "hdfs://namenode:9000/apps/files.zip",
+                    // "hdfs://namenode:9000/apps/context.py",
+                    // "hdfs://namenode:9000/apps/incident_modern_context.py",
+                    // "hdfs://namenode:9000/apps/service_case_context.py",
+                    // "hdfs://namenode:9000/apps/string_hasher.py",
+                    // "hdfs://namenode:9000/apps/service_aggregation_context.py"
+                ],
+                conf: {
+                    "spark.jars.packages": "org.apache.spark:spark-streaming-flume_2.11:2.4.4"
+                },
+                file: "hdfs://namenode:9000/apps/" + name + ".py"
             }
         };
 
