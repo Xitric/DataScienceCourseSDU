@@ -1,7 +1,7 @@
 import os
 
 from geo_pyspark.sql.types import GeometryType
-from pyspark.sql import DataFrame, session, SparkSession
+from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import udf
 from pyspark.sql.types import BooleanType
 from shapely.geometry import Polygon, Point
@@ -14,12 +14,13 @@ is_neighborhood_in_polygon = udf(
 )
 
 polygon = udf(
-    lambda neighborhood_boundary_string: create_polygon(neighborhood_boundary_string), GeometryType()
+    lambda neighborhood_boundary_string: create_polygon(neighborhood_boundary_string),
+    GeometryType()
 )
 
 
 # Create and return an array of points based on the neighborhood boundary string
-def create_polygon(neighborhood_boundary_string) -> Polygon:
+def create_polygon(neighborhood_boundary_string: str) -> Polygon:
     neighborhood_boundary = neighborhood_boundary_string[16:-3]
     points_with_spaces = neighborhood_boundary.split(", ")
     points = []

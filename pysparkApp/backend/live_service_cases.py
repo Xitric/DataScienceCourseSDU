@@ -1,6 +1,7 @@
 import os
 import sys
 
+from geo_pyspark.register import GeoSparkRegistrator
 from pyspark import RDD
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import unix_timestamp, udf
@@ -12,10 +13,7 @@ from service_case_context import ServiceCaseContext
 from string_hasher import string_hash
 
 if os.path.exists('jobs.zip'):
-    print("Success! YES!!")
     sys.path.insert(0, 'jobs.zip')
-else:
-    print("Well, shit...")
 
 
 def save_to_hbase(rdd: RDD, ctx: ServiceCaseContext):
@@ -40,7 +38,6 @@ def save_aggregation(rdd: RDD, ctx: ServiceAggregationContext):
 
         df = df.withColumn("neighborhood_id", hasher("neighborhood")) \
             .withColumn("category_id", hasher("category"))
-        df.show(10, False)
 
         ctx.save_hbase(df)
 
@@ -48,15 +45,16 @@ def save_aggregation(rdd: RDD, ctx: ServiceAggregationContext):
 if __name__ == "__main__":
     spark = SparkSession.builder.getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
+    GeoSparkRegistrator.registerAll(spark)
     ssc = StreamingContext(spark.sparkContext, 10)  # Check for new data every 10 seconds
     ssc.checkpoint("_checkpoint")
 
     service_context = ServiceCaseContext()
     dStream = service_context.load_flume(ssc)
+    dStream.pprint()
 
     # Save raw data to HBase for later batch analysis
     dStream.foreachRDD(lambda rdd: save_to_hbase(rdd, service_context))
-    dStream.pprint()
 
     # Convert to format for counting service cases
     neighborhood_category_stream = dStream.map(lambda row: (row.neighborhood, row.category))

@@ -1,11 +1,7 @@
 from geo_pyspark.register import GeoSparkRegistrator
-from geo_pyspark.register import upload_jars
-from pyspark.sql import SparkSession, Window
-from pyspark.sql.functions import count, first
+from pyspark.sql import SparkSession
 
 from incident_historical_context import IncidentHistoricalContext
-from incident_modern_context import IncidentModernContext
-from service_case_context import ServiceCaseContext
 
 DATA_SOURCE_FORMAT = "org.apache.spark.sql.execution.datasources.hbase"
 NEIGHBORHOODS = ["Seacliff", "Lake Street", "Presidio National Park", "Presidio Terrace", "Inner Richmond",
@@ -105,10 +101,10 @@ if __name__ == "__main__":
     mfn_df = load_df
     mfn_df = mfn_df.select("neighborhood", "category")
 
-    #mfn_df.over(Window.partitionBy("neighborhood", "category"))) \
-      #  .orderBy("count", ascending=False).groupBy("neighborhood").agg(first("neighborhood").alias("category"))
-   # mfn_df = mfn_df.withColumn("category", count("category").over(Window.partitionBy("neighborhood", "category"))) \
-       # .orderBy("count", ascending=False).groupBy("neighborhood").agg(first("neighborhood").alias("category"))
+    # mfn_df.over(Window.partitionBy("neighborhood", "category"))) \
+    #  .orderBy("count", ascending=False).groupBy("neighborhood").agg(first("neighborhood").alias("category"))
+    # mfn_df = mfn_df.withColumn("category", count("category").over(Window.partitionBy("neighborhood", "category"))) \
+    # .orderBy("count", ascending=False).groupBy("neighborhood").agg(first("neighborhood").alias("category"))
 
     mfn_df.show(100, False)
 

@@ -1,15 +1,17 @@
+import json
 import os
 
-from context import Context
-from neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
-from string_hasher import string_hash
+from pyspark import RDD
 from pyspark.sql import SparkSession, DataFrame, Row
 from pyspark.sql.functions import udf, unix_timestamp, to_timestamp
 from pyspark.sql.types import IntegerType, DoubleType
 from pyspark.streaming import StreamingContext, DStream
 from pyspark.streaming.flume import FlumeUtils
-from pyspark import RDD
-import json
+
+from context import Context
+from neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
+from spark_session_utils import get_spark_session_instance
+from string_hasher import string_hash
 
 # User defined function for calculating category and neighborhood numbers
 hasher = udf(
@@ -128,7 +130,6 @@ class ServiceCaseContext(Context):
                    category=data_dict.get("service_name", ""),
                    request_type=data_dict.get("service_subtype", ""),
                    request_details=data_dict.get("service_details", ""),
-                   neighborhood=data_dict.get("neighborhoods_sffind_boundaries", ""),
                    address=data_dict.get("address", ""),
                    street=data_dict.get("street", ""),
                    latitude=float(data_dict.get("lat", "0")),
@@ -145,11 +146,27 @@ class ServiceCaseContext(Context):
     def __convert_service_format(rdd: RDD) -> RDD:
         if rdd.isEmpty():
             return rdd
-
         df = rdd.toDF()
 
-        df = df.withColumn("category_id", hasher("Category")) \
-            .withColumn("neighborhood_id", hasher("Neighborhood")) \
+        # Since this method is invoked from a nested context where the SparkSession is not available, we must obtain it
+        # by other means
+        spark = get_spark_session_instance(rdd.context.getConf())
+        neighborhood_boundaries_df = neighborhood_boundaries(spark)
+
+        # Find neighborhoods from lat/lon
+        # This is necessary, because a lot of the data from the API is missing neighborhood data
+        df = df.join(
+            neighborhood_boundaries_df,
+            is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
+            "cross"
+        )
+
+        # Clean up after join
+        df = df.drop("polygon")
+
+        # Add key data and parse dates
+        df = df.withColumn("category_id", hasher("category")) \
+            .withColumn("neighborhood_id", hasher("neighborhood")) \
             .withColumn("opened", unix_timestamp(to_timestamp("openedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS"))) \
             .withColumn("updated", unix_timestamp(to_timestamp("updatedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS"))) \
             .drop("openedStr", "updatedStr")
