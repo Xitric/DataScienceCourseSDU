@@ -2,11 +2,9 @@ from datetime import datetime, timedelta
 
 from geo_pyspark.register import GeoSparkRegistrator
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_unixtime, to_date, sum, unix_timestamp, lit
-from pyspark.sql.types import FloatType, IntegerType
+from pyspark.sql.functions import from_unixtime, to_date, sum, lit
+from pyspark.sql.types import FloatType
 
-from context.service_daily_aggregation_context import ServiceDailyAggregationContext
-from context.service_monthly_aggregation_context import ServiceMonthlyAggregationContext
 from context.service_running_aggregation_context import ServiceRunningAggregationContext
 from util.community_indicators import community_indicators
 
@@ -36,34 +34,44 @@ if __name__ == "__main__":
         .agg(sum("count").alias("count"))
 
     # Convert counts to rates normalized by population
-    # [neighborhood_id, category_id, neighborhood, category, rate, time]
+    # [neighborhood, category, rate, day]
     daily_to_save = daily_df.withColumn("rate", (daily_df["count"] / daily_df["population_day"]).cast(FloatType())) \
         .drop("count") \
         .drop("population_day") \
-        .withColumn("time", unix_timestamp("day", date_format).cast(IntegerType())) \
-        .drop("day")
-    daily_context = ServiceDailyAggregationContext()
-    daily_context.save_hbase(daily_to_save)
+        .drop("neighborhood_id") \
+        .drop("category_id")
+
+    # Save to MySQL
+    daily_to_save.write.format('jdbc').options(
+        url='jdbc:mysql://mysql:3306/analysis_results',
+        driver='com.mysql.jdbc.Driver',
+        dbtable='service_cases_daily',
+        user='spark',
+        password='P18YtrJj8q6ioevT').mode('overwrite').save()
 
     # Perform aggregation over the last month of data
-    # [neighborhood_id, category_id, neighborhood, category, count, time, population_day]
+    # [neighborhood_id, category_id, neighborhood, category, count, month, population_day]
     thisMonth = datetime.now().strftime(date_format)
     lastMonth = (datetime.now() - timedelta(days=30)).strftime(date_format)
     monthly_df = daily_df.orderBy("day") \
         .where(daily_df["day"] > to_date(lit(lastMonth), date_format)) \
         .groupBy("neighborhood_id", "category_id", "neighborhood", "category", "population_day") \
         .agg(sum("count").alias("count")) \
-        .withColumn("time", unix_timestamp(lit(thisMonth), date_format).cast(IntegerType()))
+        .withColumn("month", to_date(lit(thisMonth), date_format))
 
     # Convert counts to rates normalized by population
-    # [neighborhood_id, category_id, neighborhood, category, rate, time]
+    # [neighborhood, category, rate, month]
     monthly_to_save = monthly_df.withColumn("rate", (monthly_df["count"] / monthly_df["population_day"])
                                             .cast(FloatType())) \
         .drop("count") \
-        .drop("population_day")
+        .drop("population_day") \
+        .drop("neighborhood_id") \
+        .drop("category_id")
 
-    monthly_context = ServiceMonthlyAggregationContext()
-    monthly_context.save_hbase(monthly_df)
-
-    daily_context.load_hbase(spark).show(50, False)
-    monthly_context.load_hbase(spark).show(50, False)
+    # Save to MySQL
+    monthly_to_save.write.format('jdbc').options(
+        url='jdbc:mysql://mysql:3306/analysis_results',
+        driver='com.mysql.jdbc.Driver',
+        dbtable='service_cases_monthly',
+        user='spark',
+        password='P18YtrJj8q6ioevT').mode('overwrite').save()
