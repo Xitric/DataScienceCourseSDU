@@ -145,25 +145,25 @@ class IncidentModernContext(Context):
             return rdd
         df = rdd.toDF()
 
-        # spark = get_spark_session_instance(rdd.context.getConf())
-        # neighborhood_boundaries_df = neighborhood_boundaries(spark)
-        #
-        # df = df.join(
-        #     neighborhood_boundaries_df,
-        #     is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
-        #     "cross"
-        # )
-        #
-        # df = df.drop("polygon")
-        #
-        # df = df \
-        #     .withColumn("row_id", string_to_hash(df["row_id"])) \
-        #     .withColumn("incident_category_id", string_to_hash(df["incident_category"])) \
-        #     .withColumn("incident_datetime",
-        #                 unix_timestamp("incident_datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType())) \
-        #     .withColumn("report_datetime",
-        #                 unix_timestamp("report_datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType())) \
-        #     .withColumn("neighborhood_id", string_to_hash(df["neighborhood"]))
+        spark = get_spark_session_instance(rdd.context.getConf())
+        neighborhood_boundaries_df = neighborhood_boundaries(spark)
+
+        df = df.join(
+            neighborhood_boundaries_df,
+            is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
+            "cross"
+        )
+
+        df = df.drop("polygon")
+
+        df = df \
+            .withColumn("row_id", string_to_hash(df["row_id"])) \
+            .withColumn("incident_category_id", string_to_hash(df["incident_category"])) \
+            .withColumn("incident_datetime",
+                        unix_timestamp("incident_datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType())) \
+            .withColumn("report_datetime",
+                        unix_timestamp("report_datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType())) \
+            .withColumn("neighborhood_id", string_to_hash(df["neighborhood"]))
         df.show()
         return df.rdd
 
