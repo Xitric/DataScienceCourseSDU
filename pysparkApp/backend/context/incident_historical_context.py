@@ -20,7 +20,6 @@ class IncidentHistoricalContext(Context):
     incident_modern_file = os.environ["CORE_CONF_fs_defaultFS"] \
                            + "/datasets/Police_Department_Incident_Reports__Historical_2003_to_May_2018.csv"
 
-    # TODO Slå date og time sammen?
     __catalog = ''.join("""{
             "table":{"namespace":"default", "name":"historical_incident_reports"},
             "rowkey":"key_neighborhood:key_category:key_date:key_pd_id",
@@ -82,9 +81,6 @@ class IncidentHistoricalContext(Context):
         df = df.withColumn("neighborhood_id", string_to_hash(df["neighborhood"]))
 
         return df
-
-    def load_flume(self, ssc: StreamingContext) -> DStream:
-        pass  # TODO
 
     def load_hbase(self, session: SparkSession) -> DataFrame:
         return session.read.options(catalog=self.__catalog).format(self._data_source_format).load()

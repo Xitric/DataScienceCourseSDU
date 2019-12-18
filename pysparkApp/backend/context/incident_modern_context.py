@@ -1,12 +1,16 @@
+import json
 import os
 
+from pyspark import RDD
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import udf, unix_timestamp
-from pyspark.sql.types import DoubleType, IntegerType
+from pyspark.sql.types import DoubleType, IntegerType, Row
 from pyspark.streaming import StreamingContext, DStream
+from pyspark.streaming.flume import FlumeUtils
 
 from context.context import Context
 from util.neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
+from util.spark_session_utils import get_spark_session_instance
 from util.string_hasher import string_hash
 
 string_to_hash = udf(
@@ -17,8 +21,10 @@ string_to_hash = udf(
 
 class IncidentModernContext(Context):
     # File from HDFS
-    incident_modern_file = os.environ["CORE_CONF_fs_defaultFS"] \
-                           + "/datasets/Police_Department_Incident_Reports__2018_to_Present.csv"
+    __incident_modern_file = os.environ["CORE_CONF_fs_defaultFS"] \
+                             + "/datasets/Police_Department_Incident_Reports__2018_to_Present.csv"
+    __flume_host = "livy"
+    __flume_port = 4001
 
     __catalog = ''.join("""{
             "table":{"namespace":"default", "name":"modern_incident_reports"},
@@ -55,7 +61,7 @@ class IncidentModernContext(Context):
             .option("header", "true") \
             .option("multiline", "true") \
             .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS") \
-            .load(self.incident_modern_file) \
+            .load(self.__incident_modern_file) \
             .limit(10)
 
         # Remove rows missing category or location information
@@ -100,7 +106,66 @@ class IncidentModernContext(Context):
         return incidents_df
 
     def load_flume(self, ssc: StreamingContext) -> DStream:
-        pass  # TODO
+        # stream that pulls inputs from Flume
+        # maybe change host name
+        print("hej med dig")
+        input_stream = FlumeUtils.createStream(ssc, self.__flume_host, self.__flume_port)
+        d_stream = input_stream.map(self.__parse_json).transform(lambda rdd: self.__convert_service_format(rdd))
+        return d_stream
+
+    @staticmethod
+    def __parse_json(data: str) -> Row:
+        # Read the json data as a dict
+        data_dict = json.loads(data[1])
+        # Make a Row object from the data
+        print(data_dict)
+        row = Row(
+            row_id=data_dict.get("row_id", ""),
+            incident_category=data_dict.get("incident_category", ""),
+            incident_subcategory=data_dict.get("incident_subcategory", ""),
+            incident_datetime=data_dict.get("incident_datetime", ""),
+            report_datetime=data_dict.get("report_datetime", ""),
+            incident_id=data_dict.get("incident_id", ""),
+            resolution=data_dict.get("resolution", ""),
+            intersection=data_dict.get("intersection", ""),
+            latitude=data_dict.get("latitude", ""),
+            longitude=data_dict.get("longitude", ""),
+            report_type_code=data_dict.get("report_type_code", ""),
+            report_type_description=data_dict.get("report_type_description", ""),
+            incident_number=data_dict.get("incident_number", ""),
+            police_district=data_dict.get("police_district", ""),
+            supervisor_district=data_dict.get("supervisor_district", ""),
+        )
+        print(row)
+        return row
+
+    @staticmethod
+    def __convert_service_format(rdd: RDD) -> RDD:
+        if rdd.isEmpty():
+            return rdd
+        df = rdd.toDF()
+
+        # spark = get_spark_session_instance(rdd.context.getConf())
+        # neighborhood_boundaries_df = neighborhood_boundaries(spark)
+        #
+        # df = df.join(
+        #     neighborhood_boundaries_df,
+        #     is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
+        #     "cross"
+        # )
+        #
+        # df = df.drop("polygon")
+        #
+        # df = df \
+        #     .withColumn("row_id", string_to_hash(df["row_id"])) \
+        #     .withColumn("incident_category_id", string_to_hash(df["incident_category"])) \
+        #     .withColumn("incident_datetime",
+        #                 unix_timestamp("incident_datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType())) \
+        #     .withColumn("report_datetime",
+        #                 unix_timestamp("report_datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType())) \
+        #     .withColumn("neighborhood_id", string_to_hash(df["neighborhood"]))
+        df.show()
+        return df.rdd
 
     def load_hbase(self, session: SparkSession) -> DataFrame:
         return session.read.options(catalog=self.__catalog).format(self._data_source_format).load()
