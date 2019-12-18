@@ -7,7 +7,7 @@ WORKDIR /backend
 COPY shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar .
 COPY /backend .
 
-RUN zip files.zip *
+RUN zip -r files.zip *
 
 # Remove if we create another container for Spark streaming
 EXPOSE 4000

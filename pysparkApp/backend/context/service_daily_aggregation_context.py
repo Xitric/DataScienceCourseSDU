@@ -12,6 +12,6 @@ class ServiceDailyAggregationContext(ServiceAggregationContext):
 
                 "neighborhood":{"cf":"agg", "col":"neighborhood", "type":"string"},
                 "category":{"cf":"agg", "col":"category", "type":"string"},
-                "count":{"cf":"agg", "col":"count", "type":"int"}
+                "rate":{"cf":"agg", "col":"rate", "type":"float"}
             }
         }""".split())
