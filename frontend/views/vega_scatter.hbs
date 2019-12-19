@@ -1,0 +1,28 @@
+<div id="graphContainer">
+    <!--Filter pane-->
+    <div id="filterArea">
+        <h2>Service categories</h2>
+        <form class="filterForm">
+            {{#each (getCategories (getIndex (getIndex data 0) 0))}}
+                <label>
+                    <input value="{{this}}" type="checkbox" onchange="serviceFilterChanged(this)"/>
+                    {{this}}
+                </label>
+            {{/each}}
+        </form>
+
+        <h2>Crime categories</h2>
+        <form class="filterForm">
+            {{#each (getCategories (getIndex (getIndex data 1) 0))}}
+                <label>
+                    <input value="{{this}}" type="checkbox" onchange="crimeFilterChanged(this)"/>
+                    {{this}}
+                </label>
+            {{/each}}
+        </form>
+    </div>
+
+    <!--Graph-->
+    <div id="graphArea"></div>
+    <script id="graph" src='/scripts/{{script}}.js'>{{{jsonStringify data}}}</script>
+</div>

@@ -27,21 +27,25 @@ class MySqlClient {
         });
     }
 
-    getDailyServiceRatesForCategory(category, onResult) {
-        const sql = "SELECT neighborhood, rate, day FROM service_cases_daily WHERE category = ?";
-
+    perform(sql, values, onResult) {
         this.getConnection(err => {
             if (err) console.log(err);
         }, connection => {
-            connection.query(sql, category, (err, results) => {
+            connection.query(sql, values, (err, results) => {
                 if (err) console.log(err);
                 onResult(results);
             });
         });
     }
 
-    getServiceRatesForCategory(category) {
-    //    Is this useful?
+    getDailyServiceRatesForCategory(category, onResult) {
+        const sql = "SELECT neighborhood, rate, day FROM service_cases_daily WHERE category = ?";
+        this.perform(sql, [category], onResult);
+    }
+
+    getMonthlyServiceRates(neighborhood, onResult) {
+        const sql = "SELECT * FROM service_cases_monthly";
+        this.perform(sql, [], onResult);
     }
 }
 

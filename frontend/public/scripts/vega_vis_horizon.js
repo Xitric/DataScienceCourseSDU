@@ -34,11 +34,11 @@ const vlSpec = {
             "mark": {"type": "area", "clip": true, "orient": "vertical"},
             "encoding": {
                 "x": {
-                    "field": "day", "type": "temporal", "timeUnit": "month"
+                    "field": "day", "type": "temporal", "timeUnit": "yearmonthdate"
                 },
                 "y": {
                     "field": "rate", "type": "quantitative",
-                    "scale": {"domain": [0, 50]},
+                    "scale": {"domain": [0, 0.5]},
                     "axis": {
                         "title": null,
                         "labels": true
@@ -49,18 +49,18 @@ const vlSpec = {
         }, {
             "transform": [
                 {
-                    "calculate": "datum.rate - 50",
+                    "calculate": "datum.rate - 0.5",
                     "as": "ny"
                 }
             ],
             "mark": {"type": "area", "clip": true, "orient": "vertical"},
             "encoding": {
                 "x": {
-                    "field": "day", "type": "temporal", "timeUnit": "month"
+                    "field": "day", "type": "temporal", "timeUnit": "yearmonthdate"
                 },
                 "y": {
                     "field": "ny", "type": "quantitative",
-                    "scale": {"domain": [0, 50]}
+                    "scale": {"domain": [0, 0.5]}
                 },
                 "opacity": {"value": 0.3}
             }
@@ -78,11 +78,11 @@ const vlSpec = {
                 },
                 "encoding": {
                     "x": {
-                        "field": "day", "type": "temporal", "timeUnit": "month"
+                        "field": "day", "type": "temporal", "timeUnit": "yearmonthdate"
                     },
                     "y": {
                         "field": "negy", "type": "quantitative",
-                        "scale": {"domain": [0, 50]}
+                        "scale": {"domain": [0, 0.5]}
                     },
                     "opacity": {"value": 0.5}
                 }
@@ -90,18 +90,18 @@ const vlSpec = {
             {
                 "transform": [
                     {
-                        "calculate": "datum.rate * -1 - 50",
+                        "calculate": "datum.rate * -1 - 0.5",
                         "as": "negny"
                     }
                 ],
                 "mark": {"type": "area", "clip": true, "orient": "vertical", "color": "red"},
                 "encoding": {
                     "x": {
-                        "field": "day", "type": "temporal", "timeUnit": "month"
+                        "field": "day", "type": "temporal", "timeUnit": "yearmonthdate"
                     },
                     "y": {
                         "field": "negny", "type": "quantitative",
-                        "scale": {"domain": [0, 50]}
+                        "scale": {"domain": [0, 0.5]}
                     },
                     "opacity": {"value": 0.3}
                 }
