@@ -1,7 +1,30 @@
 <div id="graphContainer">
     <!--Filter pane-->
     <div id="filterArea">
-
+        <form class="filterForm">
+            <label>
+                <input type="radio" name="type" value="service" checked="checked" onchange="typeChanged(this)"/>
+                Service cases
+            </label>
+            <label>
+                <input type="radio" name="type" value="crime" onchange="typeChanged(this)"/>
+                Incident reports
+            </label>
+            <label>
+                <select id="serviceCategory" name="category">
+                    {{#each serviceCategories}}
+                        <option value="{{this}}">{{this}}</option>
+                    {{/each}}
+                </select>
+                <select id="crimeCategory" name="category" hidden="hidden" disabled="disabled">
+                    {{#each crimeCategories}}
+                        <option value="{{this}}">{{this}}</option>
+                    {{/each}}
+                </select>
+                Category
+            </label>
+            <input type="submit" value="Submit" onsubmit="submitFilters()">
+        </form>
     </div>
 
     <!--Graph-->

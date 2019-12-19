@@ -11,7 +11,7 @@ let spec = {
         "rates": data
     },
     "data": {
-        "url": "../dataset/SFFind_neighborhoods.topojson",
+        "url": "/dataset/SFFind_neighborhoods.topojson",
         "format": {
             "type": "topojson",
             "feature": "SFFind_neighborhoods"
@@ -48,5 +48,19 @@ let spec = {
         ]
     }
 };
+
+function typeChanged(radio) {
+    if (radio.value === "service") {
+        document.getElementById("crimeCategory").setAttribute("disabled", "disabled");
+        document.getElementById("crimeCategory").setAttribute("hidden", "hidden");
+        document.getElementById("serviceCategory").removeAttribute("disabled");
+        document.getElementById("serviceCategory").removeAttribute("hidden");
+    } else if (radio.value === "crime") {
+        document.getElementById("crimeCategory").removeAttribute("disabled");
+        document.getElementById("crimeCategory").removeAttribute("hidden");
+        document.getElementById("serviceCategory").setAttribute("disabled", "disabled");
+        document.getElementById("serviceCategory").setAttribute("hidden", "hidden");
+    }
+}
 
 vegaEmbed('#graphArea', spec);

@@ -16,7 +16,7 @@ var vlSpec = {
     "layer": [
         {
         "data": {
-            "url": "../dataset/SFFind_neighborhoods.topojson",
+            "url": "/dataset/SFFind_neighborhoods.topojson",
             "format": {
                 "type": "topojson",
                 "feature": "SFFind_neighborhoods"

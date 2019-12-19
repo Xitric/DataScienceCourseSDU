@@ -49,8 +49,24 @@ class MySqlClient {
     }
 
     getMonthlyServiceRatesForCategory(category, onResult) {
-        const sql = "SELECT neighborhood, " + category + " as rate FROM service_cases_monthly";
+        const sql = "SELECT neighborhood, `" + category + "` as rate FROM service_cases_monthly";
         this.perform(sql, [], onResult);
+    }
+
+    getAvailableServiceCategories(onResult) {
+        const sql = "DESC service_cases_monthly";
+        this.perform(sql, [], results => {
+            results.splice(0, 2);
+            onResult(results.map(v => v.Field));
+        });
+    }
+
+    getAvailableIncidentCategories(onResult) {
+        const sql = "DESC incident_cases_monthly";
+        this.perform(sql, [], results => {
+            results.splice(0, 2);
+            onResult(results.map(v => v.Field));
+        });
     }
 }
 

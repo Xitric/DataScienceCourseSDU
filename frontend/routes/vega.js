@@ -11,14 +11,28 @@ router.get('/', function (req, res, next) {
 
 router.get('/choro', function (req, res, next) {
     let mysqlClient = new MySqlClient();
-    mysqlClient.getMonthlyServiceRatesForCategory("Graffiti", results => {
-        res.render('vega_choro', {
-            title: 'Choropleth Visualization',
-            script: 'vega_vis_choro',
-            layout: 'layout_vega',
-            data: results
+    let type = req.query.type || "service";
+    let category = req.query.category || "graffiti";
+
+    if (type === "service") {
+        mysqlClient.getMonthlyServiceRatesForCategory(category, results => {
+            mysqlClient.getAvailableServiceCategories(serviceCategories => {
+                mysqlClient.getAvailableIncidentCategories(incidentCategories => {
+                    res.render('vega_choro', {
+                        title: 'Choropleth Visualization',
+                        script: 'vega_vis_choro',
+                        layout: 'layout_vega',
+                        stylesheets: ["style_graph"],
+                        serviceCategories: serviceCategories,
+                        crimeCategories: incidentCategories,
+                        data: results
+                    });
+                });
+            });
         });
-    });
+    } else if (req.params.type === "crime") {
+        //TODO
+    }
 });
 
 router.get('/cluster', function (req, res, next) {
