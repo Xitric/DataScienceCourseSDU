@@ -5,7 +5,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_unixtime, to_date, sum, lit, first
 from pyspark.sql.types import FloatType
 
-from context.service_running_aggregation_context import ServiceRunningAggregationContext
+from context.service.service_running_aggregation_context import ServiceRunningAggregationContext
 from util.community_indicators import community_indicators
 
 java_date_format = "yyyy-MM-dd"

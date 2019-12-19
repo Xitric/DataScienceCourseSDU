@@ -3,7 +3,7 @@ from pyspark.sql import DataFrame, SparkSession
 from context.context import Context
 
 
-class ServiceAggregationContext(Context):
+class AggregationContext(Context):
     catalog = None
 
     def load_hbase(self, spark: SparkSession) -> DataFrame:

@@ -1,7 +1,7 @@
-from context.service_aggregation_context import ServiceAggregationContext
+from context.aggregation_context import AggregationContext
 
 
-class ServiceRunningAggregationContext(ServiceAggregationContext):
+class ServiceRunningAggregationContext(AggregationContext):
     catalog = ''.join("""{
             "table":{"namespace":"default", "name":"running_service_aggregates"},
             "rowkey":"key_neighborhood:key_category:key_time",
