@@ -118,6 +118,7 @@ class IncidentModernContext(Context):
         # Read the json data as a dict
         data_dict = json.loads(data[1])
         # Make a Row object from the data
+        print("THIS IS THE JSON DATA:")
         print(data_dict)
         row = Row(
             row_id=data_dict.get("row_id", ""),
@@ -136,6 +137,7 @@ class IncidentModernContext(Context):
             police_district=data_dict.get("police_district", ""),
             supervisor_district=data_dict.get("supervisor_district", ""),
         )
+        print("THIS IS THE ROW")
         print(row)
         return row
 
@@ -164,7 +166,6 @@ class IncidentModernContext(Context):
             .withColumn("report_datetime",
                         unix_timestamp("report_datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType())) \
             .withColumn("neighborhood_id", string_to_hash(df["neighborhood"]))
-        df.show()
         return df.rdd
 
     def load_hbase(self, session: SparkSession) -> DataFrame:
