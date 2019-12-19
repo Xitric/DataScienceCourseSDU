@@ -8,8 +8,8 @@ from pyspark.sql.functions import unix_timestamp, udf
 from pyspark.sql.types import IntegerType
 from pyspark.streaming import StreamingContext
 
-from context.service_running_aggregation_context import ServiceRunningAggregationContext
-from context.service_case_context import ServiceCaseContext
+from context.service.service_running_aggregation_context import ServiceRunningAggregationContext
+from context.service.service_case_context import ServiceCaseContext
 from util.string_hasher import string_hash
 
 if os.path.exists('jobs.zip'):

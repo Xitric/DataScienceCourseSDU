@@ -2,8 +2,8 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf, count
 from pyspark.sql.types import IntegerType
 
-from context.service_case_context import ServiceCaseContext
-from context.service_running_aggregation_context import ServiceRunningAggregationContext
+from context.service.service_case_context import ServiceCaseContext
+from context.service.service_running_aggregation_context import ServiceRunningAggregationContext
 
 truncate_time = udf(
     lambda precise_time: int(precise_time / 900) * 900,
