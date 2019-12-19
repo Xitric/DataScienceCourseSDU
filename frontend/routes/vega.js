@@ -10,7 +10,34 @@ router.get('/', function (req, res, next) {
 });
 
 router.get('/choro', function (req, res, next) {
-    res.render('vega', {title: 'Choropleth Visualization', script: 'vega_vis_choro', layout: 'layout_vega'});
+    let mysqlClient = new MySqlClient();
+    mysqlClient.getMonthlyServiceRatesForCategory("Graffiti", results => {
+        res.render('vega_choro', {
+            title: 'Choropleth Visualization',
+            script: 'vega_vis_choro',
+            layout: 'layout_vega',
+            data: results
+        });
+    });
+});
+
+router.get('/cluster', function (req, res, next) {
+    let data = [{"neighborhood": "Castro", cluster: 0},
+        {"neighborhood": "Diamond Heights", cluster: 0},
+        {"neighborhood": "Bayview", cluster: 1},
+        {"neighborhood": "Russian Hill", cluster: 0},
+        {"neighborhood": "Civic Center", cluster: 2},
+        {"neighborhood": "Nob Hill", cluster: 3},
+        {"neighborhood": "Excelsior", cluster: 3},
+        {"neighborhood": "Pacific Heights", cluster: 0}
+    ];
+
+    res.render('vega_cluster', {
+        title: 'Cluster Visualization',
+        script: 'vega_vis_cluster',
+        layout: 'layout_vega',
+        data: data
+    });
 });
 
 router.get('/horizon', function (req, res, next) {
@@ -22,7 +49,7 @@ router.get('/horizon', function (req, res, next) {
             script: 'vega_vis_horizon',
             layout: 'layout_vega',
             data: 'public/dataset/neighborhoods.txt',
-            horizonData: JSON.stringify(results)
+            horizonData: results
         });
     });
 });
@@ -32,7 +59,7 @@ router.get('/scatter', function (req, res, next) {
     mysqlClient.getMonthlyServiceRates("Castro", results => {
         let data = [results, results];
         res.render('vega_scatter', {
-            title: 'Crime and service correlations',
+            title: 'Crime and Service Correlations',
             script: 'vega_vis_scatter',
             layout: 'layout_vega',
             stylesheets: ["style_graph"],
