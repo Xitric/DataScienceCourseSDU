@@ -167,8 +167,8 @@ class ServiceCaseContext(Context):
         # Add key data and parse dates
         df = df.withColumn("category_id", hasher("category")) \
             .withColumn("neighborhood_id", hasher("neighborhood")) \
-            .withColumn("opened", unix_timestamp(to_timestamp("openedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS"))) \
-            .withColumn("updated", unix_timestamp(to_timestamp("updatedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS"))) \
+            .withColumn("opened", unix_timestamp(to_timestamp("openedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS")).cast(IntegerType())) \
+            .withColumn("updated", unix_timestamp(to_timestamp("updatedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS")).cast(IntegerType())) \
             .drop("openedStr", "updatedStr")
 
         return df.rdd

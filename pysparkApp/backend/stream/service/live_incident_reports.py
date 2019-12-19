@@ -22,7 +22,7 @@ if __name__ == "__main__":
     incident_context = IncidentModernContext()
     d_stream = incident_context.load_flume(ssc)
     d_stream.pprint()
-    d_stream.foreachRDD(func)
+   # d_stream.foreachRDD(func)
 
     ssc.start()
     ssc.awaitTerminationOrTimeout(10000000)

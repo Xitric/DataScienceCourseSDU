@@ -3,7 +3,7 @@ import os
 
 from pyspark import RDD
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import udf, unix_timestamp
+from pyspark.sql.functions import udf, unix_timestamp, to_timestamp
 from pyspark.sql.types import DoubleType, IntegerType, Row
 from pyspark.streaming import StreamingContext, DStream
 from pyspark.streaming.flume import FlumeUtils
@@ -108,7 +108,7 @@ class IncidentModernContext(Context):
     def load_flume(self, ssc: StreamingContext) -> DStream:
         # stream that pulls inputs from Flume
         # maybe change host name
-        print("hej med dig")
+        print("LOADING FLUME")
         input_stream = FlumeUtils.createStream(ssc, self.__flume_host, self.__flume_port)
         d_stream = input_stream.map(self.__parse_json).transform(lambda rdd: self.__convert_service_format(rdd))
         return d_stream
@@ -118,8 +118,6 @@ class IncidentModernContext(Context):
         # Read the json data as a dict
         data_dict = json.loads(data[1])
         # Make a Row object from the data
-        print("THIS IS THE JSON DATA:")
-        print(data_dict)
         row = Row(
             row_id=data_dict.get("row_id", ""),
             incident_category=data_dict.get("incident_category", ""),
@@ -129,22 +127,21 @@ class IncidentModernContext(Context):
             incident_id=data_dict.get("incident_id", ""),
             resolution=data_dict.get("resolution", ""),
             intersection=data_dict.get("intersection", ""),
-            latitude=data_dict.get("latitude", ""),
-            longitude=data_dict.get("longitude", ""),
+            latitude=float(data_dict.get("latitude", "0")),
+            longitude=float(data_dict.get("longitude", "0")),
             report_type_code=data_dict.get("report_type_code", ""),
             report_type_description=data_dict.get("report_type_description", ""),
             incident_number=data_dict.get("incident_number", ""),
             police_district=data_dict.get("police_district", ""),
             supervisor_district=data_dict.get("supervisor_district", ""),
         )
-        print("THIS IS THE ROW")
-        print(row)
         return row
 
     @staticmethod
     def __convert_service_format(rdd: RDD) -> RDD:
         if rdd.isEmpty():
             return rdd
+
         df = rdd.toDF()
 
         spark = get_spark_session_instance(rdd.context.getConf())
@@ -162,10 +159,13 @@ class IncidentModernContext(Context):
             .withColumn("row_id", string_to_hash(df["row_id"])) \
             .withColumn("incident_category_id", string_to_hash(df["incident_category"])) \
             .withColumn("incident_datetime",
-                        unix_timestamp("incident_datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType())) \
+                        unix_timestamp(to_timestamp("incident_datetime", "yyyy-MM-dd'T'HH:mm:ss.SSS")).cast(
+                            IntegerType())) \
             .withColumn("report_datetime",
-                        unix_timestamp("report_datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType())) \
+                        unix_timestamp(to_timestamp("report_datetime", "yyyy-MM-dd'T'HH:mm:ss.SSS")).cast(
+                            IntegerType())) \
             .withColumn("neighborhood_id", string_to_hash(df["neighborhood"]))
+        
         return df.rdd
 
     def load_hbase(self, session: SparkSession) -> DataFrame:
