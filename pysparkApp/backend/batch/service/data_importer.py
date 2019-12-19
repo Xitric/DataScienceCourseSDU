@@ -1,26 +1,40 @@
-from datetime import datetime
-
-from geo_pyspark.register import GeoSparkRegistrator
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import udf, count
+from pyspark.sql.types import IntegerType
 
 from context.service_case_context import ServiceCaseContext
+from context.service_running_aggregation_context import ServiceRunningAggregationContext
+
+truncate_time = udf(
+    lambda precise_time: int(precise_time / 900) * 900,
+    IntegerType()
+)
 
 if __name__ == "__main__":
     spark = SparkSession.builder.getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
-    GeoSparkRegistrator.registerAll(spark)
 
     service_context = ServiceCaseContext()
-    service_csv_df = service_context.load_csv(spark) \
-        .limit(1000)
-
-    service_csv_df.explain()
-    service_csv_df.show(1000, True)
+    # service_csv = service_context.load_csv(spark)
 
     # Store in HBase for further batch processing
-    # service_context.save_hbase(service_csv_df)
+    # service_context.save_hbase(service_csv)
 
-    # seconds = int(datetime.strptime("2019-12-01", "yyyy-MM-dd").timestamp())
-    # service_hbase_df = service_context.load_hbase(spark)
-    # service_hbase_df = service_hbase_df.where(service_hbase_df["opened"] < seconds)
-    # service_hbase_df.show(20, False)
+    # TODO: for aggregating after the data is imported into HBase
+    service_csv = service_context.load_hbase(spark)
+    service_csv.show(100, False)
+
+    # Batch process 15 minute intervals to optimize further jobs
+    service_aggregated = service_csv.withColumn("time", truncate_time("opened")) \
+        .groupBy("neighborhood_id", "category_id", "neighborhood", "category", "time") \
+        .agg(count("*").alias("count"))
+
+    service_aggregated = service_aggregated.select("neighborhood_id",
+                                                   "category_id",
+                                                   "time",
+                                                   "neighborhood",
+                                                   "category",
+                                                   service_aggregated["count"].cast(IntegerType()).alias("count"))
+
+    aggregation_context = ServiceRunningAggregationContext()
+    aggregation_context.save_hbase(service_aggregated)
