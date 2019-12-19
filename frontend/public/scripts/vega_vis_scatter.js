@@ -25,7 +25,7 @@ const spec = {
                 "name": "crime"
             },
             "key": "neighborhood",
-            "fields": ["crime"]
+            "fields": crimeCategories
         }
     }],
     "repeat": {

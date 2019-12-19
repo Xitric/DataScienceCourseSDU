@@ -48,6 +48,11 @@ class MySqlClient {
         this.perform(sql, [], onResult);
     }
 
+    getMonthlyIncidentRates(onResult) {
+        const sql = "SELECT * FROM incident_cases_monthly";
+        this.perform(sql, [], onResult);
+    }
+
     getMonthlyServiceRatesForCategory(category, onResult) {
         const sql = "SELECT neighborhood, `" + category + "` as rate FROM service_cases_monthly";
         this.perform(sql, [], onResult);

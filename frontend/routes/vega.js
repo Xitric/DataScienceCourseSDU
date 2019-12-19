@@ -1,15 +1,14 @@
-let vegaLite = require('vega-lite');
 let MySqlClient = require('../src/mysqlClient');
 
 let express = require('express');
 let router = express.Router();
 
 /* GET home page. */
-router.get('/', function (req, res, next) {
+router.get('/', function (req, res) {
     res.render('vega', {title: 'Vega Visualization', script: 'vega_vis', layout: 'layout_vega'});
 });
 
-router.get('/choro', function (req, res, next) {
+router.get('/choro', function (req, res) {
     let mysqlClient = new MySqlClient();
     let type = req.query.type || "service";
     let category = req.query.category || "graffiti";
@@ -45,7 +44,8 @@ router.get('/choro', function (req, res, next) {
     });
 });
 
-router.get('/cluster', function (req, res, next) {
+router.get('/cluster', function (req, res) {
+    let mysqlClient = new MySqlClient();
     let data = [{"neighborhood": "Castro", cluster: 0},
         {"neighborhood": "Diamond Heights", cluster: 0},
         {"neighborhood": "Bayview", cluster: 1},
@@ -56,15 +56,21 @@ router.get('/cluster', function (req, res, next) {
         {"neighborhood": "Pacific Heights", cluster: 0}
     ];
 
-    res.render('vega_cluster', {
-        title: 'Cluster Visualization',
-        script: 'vega_vis_cluster',
-        layout: 'layout_vega',
-        data: data
+    mysqlClient.getAvailableServiceCategories(serviceCategories => {
+        mysqlClient.getAvailableIncidentCategories(incidentCategories => {
+            res.render('vega_cluster', {
+                title: 'Cluster Visualization',
+                script: 'vega_vis_cluster',
+                layout: 'layout_vega',
+                serviceCategories: serviceCategories,
+                incidentCategories: incidentCategories,
+                data: data
+            });
+        });
     });
 });
 
-router.get('/horizon', function (req, res, next) {
+router.get('/horizon', function (req, res) {
     let mysqlClient = new MySqlClient();
     mysqlClient.getDailyServiceRatesForCategory("Encampments", results => {
         //TODO: Remove neighborhoods.txt
@@ -78,35 +84,20 @@ router.get('/horizon', function (req, res, next) {
     });
 });
 
-router.get('/scatter', function (req, res, next) {
+router.get('/scatter', function (req, res) {
     let mysqlClient = new MySqlClient();
-    mysqlClient.getMonthlyServiceRates("Castro", results => {
-        let data = [results, results];
-        res.render('vega_scatter', {
-            title: 'Crime and Service Correlations',
-            script: 'vega_vis_scatter',
-            layout: 'layout_vega',
-            stylesheets: ["style_graph"],
-            data: data
+    mysqlClient.getMonthlyServiceRates(services => {
+        mysqlClient.getMonthlyIncidentRates(incidents => {
+            let data = [services, incidents];
+            res.render('vega_scatter', {
+                title: 'Crime and Service Correlations',
+                script: 'vega_vis_scatter',
+                layout: 'layout_vega',
+                stylesheets: ["style_graph"],
+                data: data
+            });
         });
     });
-
-    //TODO: Get from MySQL
-    // let service = [{"neighborhood": "Castro", "service": 5, "service2": 10},
-    //     {"neighborhood": "Other", "service": 4, "service2": 2},
-    //     {"neighborhood": "AndMe", "service": 1, "service2": 5},
-    //     {"neighborhood": "HelloWorld", "service": 9, "service2": 12},
-    //     {"neighborhood": "Cool", "service": 2, "service2": 6},
-    //     {"neighborhood": "Name", "service": 17, "service2": 17}];
-    // let crime = [{"neighborhood": "Castro", "crime": 8},
-    //     {"neighborhood": "Other", "crime": 6},
-    //     {"neighborhood": "AndMe", "crime": 1},
-    //     {"neighborhood": "HelloWorld", "crime": 4},
-    //     {"neighborhood": "Cool", "crime": 15},
-    //     {"neighborhood": "Name", "crime": 10}];
-    //
-    // let data = [service, crime];
-    //
 });
 
 module.exports = router;
