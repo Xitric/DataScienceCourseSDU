@@ -4,7 +4,7 @@ from context.aggregation_context import AggregationContext
 class IncidentRunningAggregationContext(AggregationContext):
     catalog = ''.join("""{
             "table":{"namespace":"default", "name":"running_incident_aggregates"},
-            "rowkey":"key_neighborhood:key_category:key_time",
+            "rowkey":"key_neighborhood:key_incident_category:key_time",
             "columns":{
                 "neighborhood_id":{"cf":"rowkey", "col":"key_neighborhood", "type":"int"},
                 "incident_category_id":{"cf":"rowkey", "col":"key_incident_category", "type":"int"},
