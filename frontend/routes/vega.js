@@ -14,10 +14,10 @@ router.get('/choro', function (req, res, next) {
     let type = req.query.type || "service";
     let category = req.query.category || "graffiti";
 
-    if (type === "service") {
-        mysqlClient.getMonthlyServiceRatesForCategory(category, results => {
-            mysqlClient.getAvailableServiceCategories(serviceCategories => {
-                mysqlClient.getAvailableIncidentCategories(incidentCategories => {
+    mysqlClient.getAvailableServiceCategories(serviceCategories => {
+        mysqlClient.getAvailableIncidentCategories(incidentCategories => {
+            if (type === "service") {
+                mysqlClient.getMonthlyServiceRatesForCategory(category, results => {
                     res.render('vega_choro', {
                         title: 'Choropleth Visualization',
                         script: 'vega_vis_choro',
@@ -28,11 +28,21 @@ router.get('/choro', function (req, res, next) {
                         data: results
                     });
                 });
-            });
+            } else if (type === "crime") {
+                mysqlClient.getMonthlyIncidentRatesForCategory(category, results => {
+                    res.render('vega_choro', {
+                        title: 'Choropleth Visualization',
+                        script: 'vega_vis_choro',
+                        layout: 'layout_vega',
+                        stylesheets: ["style_graph"],
+                        serviceCategories: serviceCategories,
+                        crimeCategories: incidentCategories,
+                        data: results
+                    });
+                });
+            }
         });
-    } else if (req.params.type === "crime") {
-        //TODO
-    }
+    });
 });
 
 router.get('/cluster', function (req, res, next) {
