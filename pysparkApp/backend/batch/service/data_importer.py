@@ -15,13 +15,14 @@ if __name__ == "__main__":
     spark.sparkContext.setLogLevel("WARN")
 
     service_context = ServiceCaseContext()
-    service_csv = service_context.load_csv(spark)
+    # service_csv = service_context.load_csv(spark)
 
     # Store in HBase for further batch processing
-    service_context.save_hbase(service_csv)
+    # service_context.save_hbase(service_csv)
 
     # TODO: for aggregating after the data is imported into HBase
-    # service_csv = service_context.load_hbase(spark)
+    service_csv = service_context.load_hbase(spark)
+    service_csv.show(100, False)
 
     # Batch process 15 minute intervals to optimize further jobs
     service_aggregated = service_csv.withColumn("time", truncate_time("opened")) \

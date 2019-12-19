@@ -75,7 +75,7 @@ class ServiceCaseContext(Context):
             .option('quote', '"') \
             .option('escape', '"') \
             .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS") \
-            .load(self.__file)
+            .load(self.__file).limit(10000)
 
         # Remove rows missing category or location information
         # Some neighborhood names were simply numbers...

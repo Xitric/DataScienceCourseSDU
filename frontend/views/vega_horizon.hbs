@@ -1,13 +1,13 @@
 <div class="container">
-    
+
     <div id="vis"></div>
     {{!-- Because of the css, the menu will still be at the left side --}}
-    <div id="filters" class="dropdownmenu"> 
-            
-        <button onclick="btnToggle()" class="dropbutton"> 
-            Filters 
-        </button> 
-            
+    <div id="filters" class="dropdownmenu">
+
+        <button onclick="btnToggle()" class="dropbutton">
+            Filters
+        </button>
+
         <div id="fiDropdown" class="dropdownmenu-content" >
             {{#each (readData data)}}
                 <div class="innerContainer">
@@ -15,10 +15,8 @@
                     <label for="{{@index}}checkFilter">{{this}}</label>
                 </div>
             {{/each}}
-        </div> 
-        
+        </div>
     </div>
-
 </div>
 
-<script src='/scripts/{{script}}.js'></script>
+<script id="graph" src='/scripts/{{script}}.js'>{{{horizonData}}}</script>

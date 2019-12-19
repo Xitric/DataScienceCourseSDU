@@ -1,14 +1,14 @@
 -- Set up users
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;
 
-CREATE USER 'spark'@'localhost' IDENTIFIED BY 'P18YtrJj8q6ioevT';
+CREATE USER 'spark'@'localhost' IDENTIFIED WITH mysql_native_password BY 'P18YtrJj8q6ioevT';
 GRANT ALL PRIVILEGES ON *.* TO 'spark'@'localhost' WITH GRANT OPTION;
-CREATE USER 'spark'@'%' IDENTIFIED BY 'P18YtrJj8q6ioevT';
+CREATE USER 'spark'@'%' IDENTIFIED WITH mysql_native_password BY 'P18YtrJj8q6ioevT';
 GRANT ALL PRIVILEGES ON *.* TO 'spark'@'%' WITH GRANT OPTION;
 
-CREATE USER 'client'@'localhost' IDENTIFIED BY 'H8IAQzX236eu5Ep0';
+CREATE USER 'client'@'localhost' IDENTIFIED WITH mysql_native_password BY 'H8IAQzX236eu5Ep0';
 GRANT SELECT ON *.* TO 'client'@'localhost';
-CREATE USER 'client'@'%' IDENTIFIED BY 'H8IAQzX236eu5Ep0';
+CREATE USER 'client'@'%' IDENTIFIED WITH mysql_native_password BY 'H8IAQzX236eu5Ep0';
 GRANT SELECT ON *.* TO 'client'@'%';
 
 FLUSH PRIVILEGES;
