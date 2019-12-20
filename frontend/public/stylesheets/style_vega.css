@@ -76,8 +76,3 @@
 #graphTitle{
     text-transform:capitalize;
 }
-
-#graphWrapper {
-    text-align: center;
-    flex-grow: 5;
-}

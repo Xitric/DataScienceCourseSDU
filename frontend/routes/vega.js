@@ -94,14 +94,16 @@ router.get('/cluster/submit', function (req, res) {
 
 router.get('/horizon', function (req, res) {
     let mysqlClient = new MySqlClient();
-    mysqlClient.getDailyServiceRatesForCategory("Encampments", results => {
+    mysqlClient.getDailyServiceRatesForCategory("Encampments", horizonData => {
         //TODO: Remove neighborhoods.txt and replace with database call
-        res.render('vega_horizon', {
-            title: 'Horizon Visualization',
-            script: 'vega_vis_horizon',
-            layout: 'layout_vega',
-            data: 'public/dataset/neighborhoods.txt',
-            horizonData: results
+        mysqlClient.getNeighborhoodNames(names => {
+            res.render('vega_horizon', {
+                title: 'Horizon Visualization',
+                script: 'vega_vis_horizon',
+                layout: 'layout_vega',
+                data: names, //'public/dataset/neighborhoods.txt',
+                horizonData: horizonData
+            });
         });
     });
 });

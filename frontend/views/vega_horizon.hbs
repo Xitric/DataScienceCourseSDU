@@ -9,7 +9,7 @@
         </button>
 
         <div id="fiDropdown" class="dropdownmenu-content" >
-            {{#each (readData data)}}
+            {{#each (formatNames data)}}
                 <div class="innerContainer">
                     <input id="{{@index}}checkFilter" type="checkbox" name="{{this}}" onclick="handleClick(this);" checked="null" class="filterCheck"/>
                     <label for="{{@index}}checkFilter">{{this}}</label>
