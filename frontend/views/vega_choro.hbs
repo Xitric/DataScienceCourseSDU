@@ -1,7 +1,7 @@
 <div id="graphContainer">
     <!--Filter pane-->
     <div id="filterArea">
-        <form class="filterForm">
+        <form class="filterForm" action="choro/submit" method="get">
             <label>
                 <input type="radio" name="type" value="service" checked="checked" onchange="typeChanged(this)"/>
                 Service cases
@@ -23,7 +23,8 @@
                 </select>
                 Category
             </label>
-            <input type="submit" value="Submit" onsubmit="submitFilters()">
+            <input type="submit" value="Submit">
+            <div id="state">{{state}}</div>
         </form>
     </div>
 

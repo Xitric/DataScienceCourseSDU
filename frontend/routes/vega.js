@@ -1,5 +1,6 @@
 let MySqlClient = require('../src/mysqlClient');
 let LivyClient = require('../src/livyClient');
+const url = require('url');
 
 let express = require('express');
 let router = express.Router();
@@ -11,39 +12,103 @@ router.get('/', function (req, res) {
 
 router.get('/choro', function (req, res) {
     let mysqlClient = new MySqlClient();
+    let livyClient = new LivyClient();
+    
+    let batchId = req.cookies.batchId;
+    let state;
+
     let type = req.query.type || "service";
     let category = req.query.category || "graffiti";
 
-    mysqlClient.getAvailableServiceCategories(serviceCategories => {
-        mysqlClient.getAvailableIncidentCategories(incidentCategories => {
-            if (type === "service") {
-                mysqlClient.getMonthlyServiceRatesForCategory(category, results => {
-                    res.render('vega_choro', {
-                        title: 'Choropleth Visualization',
-                        script: 'vega_vis_choro',
-                        layout: 'layout_vega',
-                        stylesheets: ["style_graph"],
-                        serviceCategories: serviceCategories,
-                        incidentCategories: incidentCategories,
-                        data: results,
-                        category: category
+    livyClient.batchQuery(batchId, body => {
+        state = body.state;
+
+        mysqlClient.getAvailableServiceCategories(serviceCategories => {
+            mysqlClient.getAvailableIncidentCategories(incidentCategories => {
+                if (type === "service") {
+                    mysqlClient.getMonthlyServiceRatesForCategory(category, results => {
+                        res.render('vega_choro', {
+                            title: 'Choropleth Visualization',
+                            script: 'vega_vis_choro',
+                            layout: 'layout_vega',
+                            stylesheets: ["style_graph"],
+                            serviceCategories: serviceCategories,
+                            incidentCategories: incidentCategories,
+                            data: results,
+                            category: category,
+                            state: state
+                        });
                     });
-                });
-            } else if (type === "incident") {
-                mysqlClient.getMonthlyIncidentRatesForCategory(category, results => {
-                    res.render('vega_choro', {
-                        title: 'Choropleth Visualization',
-                        script: 'vega_vis_choro',
-                        layout: 'layout_vega',
-                        stylesheets: ["style_graph"],
-                        serviceCategories: serviceCategories,
-                        incidentCategories: incidentCategories,
-                        data: results,
-                        category: category
+                } else if (type === "incident") {
+                    mysqlClient.getMonthlyIncidentRatesForCategory(category, results => {
+                        res.render('vega_choro', {
+                            title: 'Choropleth Visualization',
+                            script: 'vega_vis_choro',
+                            layout: 'layout_vega',
+                            stylesheets: ["style_graph"],
+                            serviceCategories: serviceCategories,
+                            incidentCategories: incidentCategories,
+                            data: results,
+                            category: category,
+                            state: state
+                        });
                     });
-                });
-            }
+                }
+            });
         });
+    });
+});
+
+router.get('/choro/submit', function (req, res) {
+    let livyClient = new LivyClient();
+    
+    let type = req.query.type || "service";
+    let category = req.query.category || "graffiti";
+    
+    let batchId = req.cookies.batchId;
+    let state;
+
+    livyClient.batchQuery(batchId, body => {
+        state = body.state;
+
+        // Don't allow the user to run multiple jobs at a time
+        if (state == "running") {
+            res.redirect(url.format({
+                pathname:"/vega/choro",
+                query: {
+                   "type": type,
+                   "category": category
+                 }
+              }));
+        }
+        else {
+            // Start a batch submit for a k-means analysis
+            let name = "";
+
+            if (type == "incident") {
+                name = "incident_aggregator";
+            }
+            else {
+                name = "service_aggregator";
+            }
+
+            livyClient.batchSubmit(name, [], body => {
+
+                // Save the current batch id in the cookie
+                res.cookie('batchId', body.id, {
+                    maxAge: 60*60*24,
+                    httpOnly: true
+                });
+
+                res.redirect(url.format({
+                    pathname:"/vega/choro",
+                    query: {
+                    "type": type,
+                    "category": category
+                    }
+                }));
+            });
+        }
     });
 });
 
@@ -135,8 +200,7 @@ router.get('/cluster/submit', function (req, res) {
 
                 res.redirect('/vega/cluster');
             });
-        }
-        
+        } 
     });
 });
 
