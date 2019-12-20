@@ -8,6 +8,11 @@
     flex-direction: row-reverse;
 }
 
+.containerState {
+    display: flex;
+    justify-content: space-around;
+}
+
 #vis {
     flex-grow: 1;
 }

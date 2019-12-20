@@ -49,31 +49,41 @@ router.get('/choro', function (req, res) {
 
 router.get('/cluster', function (req, res) {
     let mysqlClient = new MySqlClient();
+    let livyClient = new LivyClient();
+    
+    let batchId = req.cookies.batchId;
+    let state;
 
-    mysqlClient.getAvailableServiceCategories(serviceCategories => {
-        mysqlClient.getAvailableIncidentCategories(incidentCategories => {
-            mysqlClient.getNeighborhoodClusters(results => {
-                if (results) {
-                    res.render('vega_cluster', {
-                        title: 'Cluster Visualization',
-                        script: 'vega_vis_cluster',
-                        layout: 'layout_vega',
-                        stylesheets: ["style_graph"],
-                        serviceCategories: serviceCategories,
-                        incidentCategories: incidentCategories,
-                        data: data
-                    });
-                } else {
-                    res.render('vega_cluster', {
-                        title: 'Cluster Visualization',
-                        script: 'vega_vis_cluster',
-                        layout: 'layout_vega',
-                        stylesheets: ["style_graph"],
-                        serviceCategories: serviceCategories,
-                        incidentCategories: incidentCategories,
-                        data: []
-                    });
-                }
+    livyClient.batchQuery(batchId, body => {
+        state = body.state;
+
+        mysqlClient.getAvailableServiceCategories(serviceCategories => {
+            mysqlClient.getAvailableIncidentCategories(incidentCategories => {
+                mysqlClient.getNeighborhoodClusters(results => {
+                    if (results) {
+                        res.render('vega_cluster', {
+                            title: 'Cluster Visualization',
+                            script: 'vega_vis_cluster',
+                            layout: 'layout_vega',
+                            stylesheets: ["style_graph"],
+                            serviceCategories: serviceCategories,
+                            incidentCategories: incidentCategories,
+                            data: results,
+                            state: state
+                        });
+                    } else {
+                        res.render('vega_cluster', {
+                            title: 'Cluster Visualization',
+                            script: 'vega_vis_cluster',
+                            layout: 'layout_vega',
+                            stylesheets: ["style_graph"],
+                            serviceCategories: serviceCategories,
+                            incidentCategories: incidentCategories,
+                            data: [],
+                            state: state
+                        });
+                    }
+                });
             });
         });
     });
@@ -82,13 +92,51 @@ router.get('/cluster', function (req, res) {
 router.get('/cluster/submit', function (req, res) {
     let livyClient = new LivyClient();
 
-    let serviceCategories = req.query.services.join(";").split(' ').join('+');
-    let incidentCategories = req.query.incidents.join(";").split(' ').join('+');
+    let batchId = req.cookies.batchId;
+    let state;
 
-    livyClient.batchSubmit('k-means', [serviceCategories, incidentCategories], body => {
-        //TODO: Save session id?
-        console.log(body);
-        res.redirect('/vega/cluster');
+    livyClient.batchQuery(batchId, body => {
+        state = body.state;
+
+        // Don't allow the user to run multiple jobs at a time
+        if (state == "running") {
+            res.redirect('/vega/cluster');
+        }
+        else {
+            let serviceCategories = "";
+            let incidentCategories = "";
+            
+            // Handles whether the req has a nothing, just a string, or an array
+            if (req.query.services != undefined) {
+                if (typeof(req.query.services) == "string") {
+                    serviceCategories = req.query.services;
+                }
+                else {
+                    serviceCategories = req.query.services.join(";").split(' ').join('+');
+                }
+            }
+            if (req.query.incidents != undefined) {
+                if (typeof(req.query.incidents) == "string") {
+                    incidentCategories = req.query.incidents;
+                }
+                else {
+                    incidentCategories = req.query.incidents.join(";").split(' ').join('+');
+                }
+            }
+
+            // Start a batch submit for a k-means analysis
+            livyClient.batchSubmit('k-means', [serviceCategories, incidentCategories], body => {
+
+                // Save the current batch id in the cookie
+                res.cookie('batchId', body.id, {
+                    maxAge: 60*60*24,
+                    httpOnly: true
+                });
+
+                res.redirect('/vega/cluster');
+            });
+        }
+        
     });
 });
 
