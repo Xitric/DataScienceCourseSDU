@@ -62,8 +62,6 @@ if __name__ == "__main__":
         .pivot("category") \
         .agg(first("rate").alias("rate"))
 
-    monthly_to_save.show(10, False)
-
     # Save to MySQL
     monthly_to_save.write.format('jdbc').options(
         url='jdbc:mysql://mysql:3306/analysis_results',

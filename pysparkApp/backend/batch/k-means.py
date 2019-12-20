@@ -112,9 +112,6 @@ if __name__ == "__main__":
     # Select only what we need from the DataFrame
     df_cluster = df_trans.select("neighborhood", \
         df_trans["prediction"].alias("cluster"))
-    
-    # For showing the result in the terminal
-    # df_cluster.sort("neighborhood", ascending=False).show(35)
 
     # Save to MySQL
     df_cluster.write.format('jdbc').options(
