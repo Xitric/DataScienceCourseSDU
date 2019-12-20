@@ -31,3 +31,8 @@
 select {
     max-width: 100%;
 }
+
+#graphWrapper {
+    text-align: center;
+    flex-grow: 5;
+}

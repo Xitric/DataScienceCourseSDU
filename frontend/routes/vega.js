@@ -25,7 +25,8 @@ router.get('/choro', function (req, res) {
                         stylesheets: ["style_graph"],
                         serviceCategories: serviceCategories,
                         crimeCategories: incidentCategories,
-                        data: results
+                        data: results,
+                        category: category
                     });
                 });
             } else if (type === "crime") {
@@ -37,7 +38,8 @@ router.get('/choro', function (req, res) {
                         stylesheets: ["style_graph"],
                         serviceCategories: serviceCategories,
                         crimeCategories: incidentCategories,
-                        data: results
+                        data: results,
+                        category: category
                     });
                 });
             }

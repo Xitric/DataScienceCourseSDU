@@ -28,6 +28,9 @@
     </div>
 
     <!--Graph-->
-    <div id="graphArea"></div>
+    <div id="graphWrapper">
+        <h2 id="graphTitle">{{category}}</h2>
+        <div id="graphArea"></div>
+    </div>
     <script id="graph" src='/scripts/{{script}}.js'>{{{jsonStringify data}}}</script>
 </div>
