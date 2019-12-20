@@ -31,14 +31,10 @@
                 <label>
                     Run application named
                     <input type="text" name="appName">
-                </label>
-                <label>
-                    with version
-                    <input type="text" name="appVersion" value="1">
                 </label><br/>
                 <button type="submit" value="Submit">Submit</button>
 
-                <p>Note: Spark applications must be uploaded to <span class="code">hdfs://namenode:9000/apps/</span> as Python <span class="code">.egg</span> archives. The job is started by calling the <span class="code">run()</span> method in the <span class="code">__main__.py</span> file in the root of the <span class="code">.egg</span> archive.</p>
+                <p>Note: Drivers for Spark applications must be uploaded to <span class="code">hdfs://namenode:9000/apps/</span> as Python <span class="code">.py</span> files. The code for all python files must be uploaded to the same directory as a single <span class="code">.zip</span> archive. Spark applications are executed by typing in the name of the driver excluding <span class="code">.py</span> in the text field above, such as <span class="code">live_service_cases</span>.</p>
             </form>
 
             <form action="/admin/update" method="get">
@@ -47,6 +43,7 @@
         </div>
     </div>
 
+<!--    TODO-->
     <div class="dashboardCard">
         <div class="dashboardCardHead">
             <p>Initialize</p>

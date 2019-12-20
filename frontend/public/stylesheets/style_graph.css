@@ -1,0 +1,33 @@
+#graphContainer {
+    display: flex;
+}
+
+#filterArea {
+    flex-grow: 1;
+    max-width: 250px;
+    min-width: 150px;
+    background-color: white;
+}
+
+#graphArea {
+    flex-grow: 5;
+}
+
+#graphArea > *:first-child {
+    margin: auto;
+    display:block;
+    text-align:center;
+}
+
+#graphArea > p {
+    margin-top: 32px !important;
+}
+
+.filterForm {
+    display: flex;
+    flex-direction: column;
+}
+
+select {
+    max-width: 100%;
+}

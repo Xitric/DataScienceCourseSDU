@@ -35,7 +35,7 @@
     display: inline-block; 
     outline: none;
 
-    width: 250;
+    width: 250px;
 } 
   
 .dropdownmenu-content { 
@@ -44,7 +44,7 @@
     background-color: #f9f9f9; 
     min-width: 250px; 
     overflow: auto; 
-    box-shadow: 0px 8px 16px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
     
     border: 2px solid #ccc;
     width: 180px;

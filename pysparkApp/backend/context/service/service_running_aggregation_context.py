@@ -1,11 +1,9 @@
-from pyspark.sql import DataFrame, SparkSession
-
-from context.context import Context
+from context.aggregation_context import AggregationContext
 
 
-class ServiceAggregationContext(Context):
-    __catalog = ''.join("""{
-            "table":{"namespace":"default", "name":"daily_service_aggregates"},
+class ServiceRunningAggregationContext(AggregationContext):
+    catalog = ''.join("""{
+            "table":{"namespace":"default", "name":"running_service_aggregates"},
             "rowkey":"key_neighborhood:key_category:key_time",
             "columns":{
                 "neighborhood_id":{"cf":"rowkey", "col":"key_neighborhood", "type":"int"},
@@ -17,9 +15,3 @@ class ServiceAggregationContext(Context):
                 "count":{"cf":"agg", "col":"count", "type":"int"}
             }
         }""".split())
-
-    def load_hbase(self, spark: SparkSession) -> DataFrame:
-        return spark.read.options(catalog=self.__catalog).format(self._data_source_format).load()
-
-    def save_hbase(self, df: DataFrame):
-        df.write.options(catalog=self.__catalog, newtable="5").format(self._data_source_format).save()

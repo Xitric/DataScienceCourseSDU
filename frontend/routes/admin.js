@@ -26,8 +26,7 @@ router.post("/upload", upload.single("file"), function (req, res, next) {
 router.post('/submit', function (req, res, next) {
     let client = new LivyClient();
     let name = req.body.appName;
-    let version = req.body.appVersion;
-    client.batchSubmit(name, version, function (session) {
+    client.batchSubmit(name, [], function (session) {
         console.log(session);
         res.cookie('livySession', session);
         res.redirect("back");
