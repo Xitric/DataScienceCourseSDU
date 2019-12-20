@@ -16,6 +16,7 @@ python_date_format = "%Y-%m-%d"
 if __name__ == "__main__":
     spark = SparkSession.builder.getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
+    spark.sparkContext.getConf().set("spark.executor.heartbeatInterval", "2000000")
     GeoSparkRegistrator.registerAll(spark)
 
     timestamp_file_path = os.environ["CORE_CONF_fs_defaultFS"] + "/aggregator_timestamps/service.csv"
