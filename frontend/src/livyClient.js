@@ -12,7 +12,8 @@ class LivyClient {
             method: "POST",
             json: {
                 jars: [
-                    "hdfs://namenode:9000/apps/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar"
+                    "hdfs://namenode:9000/apps/shc-core-1.1.3-2.4-s_2.11-jar-with-dependencies.jar",
+                    "hdfs://namenode:9000/apps/mysql-connector-java-8.0.18.jar"
                 ],
                 pyFiles: [
                     "hdfs://namenode:9000/apps/files.zip",
@@ -25,7 +26,7 @@ class LivyClient {
             }
         };
 
-        request(options, function (err, res, body) {
+        request(options, function(err, res, body) {
             onComplete(body);
         });
     }
@@ -36,7 +37,7 @@ class LivyClient {
             method: "GET"
         };
 
-        request(options, function (err, res, body) {
+        request(options, function(err, res, body) {
             onComplete(body);
         });
     }
