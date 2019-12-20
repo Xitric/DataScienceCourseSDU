@@ -7,7 +7,7 @@
                 Service cases
             </label>
             <label>
-                <input type="radio" name="type" value="crime" onchange="typeChanged(this)"/>
+                <input type="radio" name="type" value="incident" onchange="typeChanged(this)"/>
                 Incident reports
             </label>
             <label>
@@ -16,8 +16,8 @@
                         <option value="{{this}}">{{this}}</option>
                     {{/each}}
                 </select>
-                <select id="crimeCategory" name="category" hidden="hidden" disabled="disabled">
-                    {{#each crimeCategories}}
+                <select id="incidentCategory" name="category" hidden="hidden" disabled="disabled">
+                    {{#each incidentCategories}}
                         <option value="{{this}}">{{this}}</option>
                     {{/each}}
                 </select>
