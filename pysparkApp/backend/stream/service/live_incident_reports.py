@@ -5,7 +5,7 @@ from pyspark.sql.types import IntegerType
 from pyspark.streaming import StreamingContext
 
 from context.incident_aggregation_context import IncidentAggregationContext
-from context.incident_modern_context import IncidentModernContext
+from context.incident.incident_modern_context import IncidentModernContext
 from util.string_hasher import string_hash
 
 

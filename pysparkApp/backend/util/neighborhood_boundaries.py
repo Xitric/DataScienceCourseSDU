@@ -13,21 +13,20 @@ is_neighborhood_in_polygon = udf(
     BooleanType()
 )
 
+polygon = udf(
+    lambda neighborhood_boundary_string: create_polygon(neighborhood_boundary_string), GeometryType()
+)
+
 
 # Create and return an array of points based on the neighborhood boundary string
-def create_polygon(neighborhood_boundary_string: str):
+def create_polygon(neighborhood_boundary_string: str) -> Polygon:
     neighborhood_boundary = neighborhood_boundary_string[16:-3]
     points_with_spaces = neighborhood_boundary.split(", ")
     points = []
     for point in points_with_spaces:
         coordinates = point.split(" ")
         points.append(Point(float(coordinates[1]), float(coordinates[0])))
-    return [[p.x, p.y] for p in points]
-
-
-polygon = udf(
-    create_polygon, ArrayType(ArrayType(FloatType()))
-)
+    return Polygon([[p.x, p.y] for p in points])
 
 
 # Read the neighborhood file from HDFS and create polygons based on the neighborhood boundaries
