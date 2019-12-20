@@ -3,13 +3,13 @@ import sys
 
 from geo_pyspark.register import GeoSparkRegistrator
 from pyspark import RDD
-from pyspark.sql import SparkSession
 from pyspark.sql.functions import unix_timestamp, udf
 from pyspark.sql.types import IntegerType
 from pyspark.streaming import StreamingContext
 
-from context.service.service_running_aggregation_context import ServiceRunningAggregationContext
 from context.service.service_case_context import ServiceCaseContext
+from context.service.service_running_aggregation_context import ServiceRunningAggregationContext
+from util.spark_session_utils import get_spark_session_instance
 from util.string_hasher import string_hash
 
 if os.path.exists('jobs.zip'):
@@ -43,8 +43,7 @@ def save_aggregation(rdd: RDD, ctx: ServiceRunningAggregationContext):
 
 
 if __name__ == "__main__":
-    spark = SparkSession.builder.getOrCreate()
-    spark.sparkContext.setLogLevel("ERROR")
+    spark = get_spark_session_instance()
     GeoSparkRegistrator.registerAll(spark)
     ssc = StreamingContext(spark.sparkContext, 10)  # Check for new data every 10 seconds
     ssc.checkpoint("_checkpoint")

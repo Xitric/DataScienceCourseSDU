@@ -20,19 +20,17 @@ class IncidentHistoricalContext(Context):
     incident_modern_file = os.environ["CORE_CONF_fs_defaultFS"] \
                            + "/datasets/Police_Department_Incident_Reports__Historical_2003_to_May_2018.csv"
 
-    # TODO Slå date og time sammen?
     __catalog = ''.join("""{
             "table":{"namespace":"default", "name":"historical_incident_reports"},
-            "rowkey":"key_neighborhood:key_category:key_date:key_pd_id",
+            "rowkey":"key_neighborhood:key_category:key_opened:key_pd_id",
             "columns":{
                 "neighborhood_id":{"cf":"rowkey", "col":"key_neighborhood", "type":"int"},
                 "category_id":{"cf":"rowkey", "col":"key_category", "type":"int"},
-                "date":{"cf":"rowkey", "col":"key_date", "type":"int"},
+                "opened":{"cf":"rowkey", "col":"key_opened", "type":"int"},
                 "pd_id":{"cf":"rowkey", "col":"key_pd_id", "type":"int"},
                 "neighborhood":{"cf":"a", "col":"neighborhood", "type":"string"},
                 "category":{"cf":"a", "col":"category", "type":"string"},
-                "date":{"cf":"a", "col":"date", "type":"int"},
-                "time":{"cf":"a", "col":"time", "type":"int"},
+                "opened":{"cf":"a", "col":"opened", "type":"int"},
                 "resolution":{"cf":"a", "col":"resolution", "type":"string"},
                 "incidnt_num":{"cf":"a", "col":"incidnt_num", "type":"string"},
                 "descript":{"cf":"a", "col":"descript", "type":"string"},
@@ -69,9 +67,13 @@ class IncidentHistoricalContext(Context):
             df["PdDistrict"].alias("pd_district")
         )
 
-        neighborhood_boundaries_df = neighborhood_boundaries(spark)
+        # Combine date and time
+        df = df.withColumn("opened", df["date"] + df["time"]) \
+            .drop("date") \
+            .drop("time")
 
         # Join df and neighborhood_boundaries_df if latitude and longitude is in the polygon
+        neighborhood_boundaries_df = neighborhood_boundaries(spark)
         df = df.join(
             neighborhood_boundaries_df,
             is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
@@ -84,7 +86,7 @@ class IncidentHistoricalContext(Context):
         return df
 
     def load_flume(self, ssc: StreamingContext) -> DStream:
-        pass  # TODO
+        pass
 
     def load_hbase(self, session: SparkSession) -> DataFrame:
         return session.read.options(catalog=self.__catalog).format(self._data_source_format).load()

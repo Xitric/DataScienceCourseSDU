@@ -1,17 +1,16 @@
 from datetime import datetime, timedelta
 
 from geo_pyspark.register import GeoSparkRegistrator
-from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_unixtime, to_date, sum, lit, first
 from pyspark.sql.types import FloatType
 
 from batch.service.service_aggregator import python_date_format, java_date_format
 from context.incident.incident_running_aggregation_context import IncidentRunningAggregationContext
 from util.community_indicators import community_indicators
+from util.spark_session_utils import get_spark_session_instance
 
 if __name__ == "__main__":
-    spark = SparkSession.builder.getOrCreate()
-    spark.sparkContext.setLogLevel("WARN")
+    spark = get_spark_session_instance()
     GeoSparkRegistrator.registerAll(spark)
 
     context = IncidentRunningAggregationContext()
