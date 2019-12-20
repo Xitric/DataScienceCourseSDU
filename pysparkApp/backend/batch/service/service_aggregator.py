@@ -1,14 +1,16 @@
 import os
 from datetime import datetime, timedelta
 
+import mysql
 from geo_pyspark.register import GeoSparkRegistrator
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_unixtime, to_date, sum, lit, first
-from pyspark.sql.types import FloatType
+from pyspark.sql.types import FloatType, Row
 
 from context.service.service_running_aggregation_context import ServiceRunningAggregationContext
 from util.community_indicators import community_indicators
+from mysql.connector import (connection)
 
 java_date_format = "yyyy-MM-dd"
 python_date_format = "%Y-%m-%d"
@@ -39,7 +41,7 @@ if __name__ == "__main__":
     context = ServiceRunningAggregationContext()
     df = context.load_hbase_timestamp(spark, int(service_timestamp))
     df.show(10, True)
-    print(df.count())
+    print(df.count())  # dette skal stige
 
     # check file in hdfs, if a timetamp exists, take the timestamp-1 day and compute from there
 
@@ -75,16 +77,33 @@ if __name__ == "__main__":
     date_in_seconds = int((latest_date - datetime.utcfromtimestamp(0)).total_seconds())
     print(date_in_seconds)
 
-    # Save to MySQL
-    daily_to_save.write.format('jdbc').options(
-        url='jdbc:mysql://mysql:3306/analysis_results',
-        driver='com.mysql.jdbc.Driver',
-        dbtable='service_cases_daily',
-        user='spark',
-        password='P18YtrJj8q6ioevT').mode('append').save()
+
+    def insert_into_db(row: Row):
+        db_connection = mysql.connector.connect(host="mysql",
+                                                user="spark",
+                                                passwd="P18YtrJj8q6ioevT",
+                                                database="analysis_results")
+        query = "INSERT INTO service_cases_daily (neighborhood, category, rate, day) VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE rate = VALUES(rate);"
+        insert_tuple = (row['neighborhood'], row['category'], row['rate'], row['day'])
+        cursor = db_connection.cursor(prepared=True)
+        cursor.execute(query, insert_tuple)
+        db_connection.commit()
+        cursor.close()
+        db_connection.close()
+
+
+    # Save to MySQL if there is no timestamp
+    if service_timestamp == 0:
+        daily_to_save.write.format('jdbc').options(
+            url='jdbc:mysql://mysql:3306/analysis_results',
+            driver='com.mysql.jdbc.Driver',
+            dbtable='service_cases_daily',
+            user='spark',
+            password='P18YtrJj8q6ioevT').mode('overwrite').save()
+    else:
+        daily_to_save.foreach(lambda row: insert_into_db(row))
 
     daily_to_save.show(10, True)
-
     timestamp_df = spark.createDataFrame([(date_in_seconds,)], ["date"])  # spark expects a tuple
     timestamp_df.repartition(1).write.format("csv").mode("overwrite").save("/aggregator_timestamps/service.csv")
 
