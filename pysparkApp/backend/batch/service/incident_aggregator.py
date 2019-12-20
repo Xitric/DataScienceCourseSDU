@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-from geo_pyspark.register import GeoSparkRegistrator
 from pyspark.sql.functions import from_unixtime, to_date, sum, lit, first
 from pyspark.sql.types import FloatType
 
@@ -11,7 +10,6 @@ from util.spark_session_utils import get_spark_session_instance
 
 if __name__ == "__main__":
     spark = get_spark_session_instance()
-    GeoSparkRegistrator.registerAll(spark)
 
     context = IncidentRunningAggregationContext()
     df = context.load_hbase(spark)
@@ -38,7 +36,7 @@ if __name__ == "__main__":
         driver='com.mysql.jdbc.Driver',
         dbtable='incident_cases_daily',
         user='spark',
-        password='P18YtrJj8q6ioevT').mode('overwrite').save()
+        password='P18YtrJj8q6ioevT').mode('append').save()
 
     thisMonth = datetime.now().strftime(python_date_format)
     lastMonth = (datetime.now() - timedelta(days=30)).strftime(python_date_format)

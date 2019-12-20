@@ -30,7 +30,7 @@ def get_batch_processed(df: DataFrame) -> DataFrame:
                              aggregated["count"].cast(IntegerType()).alias("count"))
 
 
-def import_data(context: Context, spark: SparkSession, aggregator: AggregationContext, limit: int = 200000):
+def import_data(context: Context, spark: SparkSession, aggregator: AggregationContext, limit: int = 50000):
     # Store in HBase for further batch processing
     csv = load_newest(context, spark).limit(limit)
     context.save_hbase(csv)

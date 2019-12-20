@@ -1,7 +1,6 @@
 import os
 import sys
 
-from geo_pyspark.register import GeoSparkRegistrator
 from pyspark import RDD
 from pyspark.sql.functions import unix_timestamp, udf
 from pyspark.sql.types import IntegerType
@@ -44,7 +43,6 @@ def save_aggregation(rdd: RDD, ctx: ServiceRunningAggregationContext):
 
 if __name__ == "__main__":
     spark = get_spark_session_instance()
-    GeoSparkRegistrator.registerAll(spark)
     ssc = StreamingContext(spark.sparkContext, 10)  # Check for new data every 10 seconds
     ssc.checkpoint("_checkpoint")
 

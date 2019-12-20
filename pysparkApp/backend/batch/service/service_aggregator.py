@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-from geo_pyspark.register import GeoSparkRegistrator
 from pyspark.sql.functions import from_unixtime, to_date, sum, lit, first
 from pyspark.sql.types import FloatType
 
@@ -13,7 +12,6 @@ python_date_format = "%Y-%m-%d"
 
 if __name__ == "__main__":
     spark = get_spark_session_instance()
-    GeoSparkRegistrator.registerAll(spark)
 
     context = ServiceRunningAggregationContext()
     df = context.load_hbase(spark)
