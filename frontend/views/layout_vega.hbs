@@ -4,6 +4,9 @@
     <title>{{title}}</title>
     <link rel='stylesheet' href='/stylesheets/style.css'/>
     <link rel='stylesheet' href='/stylesheets/style_vega.css'/>
+    {{#each stylesheets}}
+        <link rel='stylesheet' href='/stylesheets/{{this}}.css'/>
+    {{/each}}
 
     <script src="https://cdn.jsdelivr.net/npm/vega@5.9.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-lite@4.0.0"></script>

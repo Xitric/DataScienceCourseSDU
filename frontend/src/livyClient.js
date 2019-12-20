@@ -6,7 +6,7 @@ class LivyClient {
         this.baseUrl = "http://livy:8998";
     }
 
-    batchSubmit(name, version, onComplete) {
+    batchSubmit(name, parameters, onComplete) {
         let options = {
             url: this.baseUrl + "/batches",
             method: "POST",
@@ -20,7 +20,8 @@ class LivyClient {
                 conf: {
                     "spark.jars.packages": "org.apache.spark:spark-streaming-flume_2.11:2.4.4"
                 },
-                file: "hdfs://namenode:9000/apps/" + name + ".py"
+                file: "hdfs://namenode:9000/apps/" + name + ".py",
+                args: parameters
             }
         };
 

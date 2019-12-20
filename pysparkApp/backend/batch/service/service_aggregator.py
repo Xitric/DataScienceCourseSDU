@@ -48,7 +48,7 @@ if __name__ == "__main__":
         driver='com.mysql.jdbc.Driver',
         dbtable='service_cases_daily',
         user='spark',
-        password='P18YtrJj8q6ioevT').mode('overwrite').save()
+        password='P18YtrJj8q6ioevT').mode('append').save()
 
     # Perform aggregation over the last month of data
     # [neighborhood_id, category_id, neighborhood, category, count, month, population_day]
@@ -69,12 +69,15 @@ if __name__ == "__main__":
         .drop("category_id")
 
     # Convert many rows into one large row for each neighborhood that specifies rates for every category that month
-    monthly_to_save = monthly_to_save.where(monthly_to_save["category"].isin(lit("Encampments"), lit("Illegal Postings"), lit("Street Defects"))) \
-        .groupBy("neighborhood", "month") \
+    # monthly_to_save = monthly_to_save.where(monthly_to_save["category"]
+    #                                         .isin(lit("Encampments"), lit("Illegal Postings"), lit("Street Defects")))
+    # monthly_to_save.explain()
+    # monthly_to_save = monthly_to_save.groupBy("neighborhood", "month") \
+    #     .pivot("category") \
+    #     .agg(first("rate").alias("rate"))
+    monthly_to_save = monthly_to_save.groupBy("neighborhood", "month") \
         .pivot("category") \
         .agg(first("rate").alias("rate"))
-
-    monthly_to_save.show(10, False)
 
     # Save to MySQL
     monthly_to_save.write.format('jdbc').options(

@@ -27,21 +27,61 @@ class MySqlClient {
         });
     }
 
-    getDailyServiceRatesForCategory(category, onResult) {
-        const sql = "SELECT neighborhood, rate, day FROM service_cases_daily WHERE category = ?";
-
+    perform(sql, values, onResult) {
         this.getConnection(err => {
             if (err) console.log(err);
         }, connection => {
-            connection.query(sql, category, (err, results) => {
+            connection.query(sql, values, (err, results) => {
                 if (err) console.log(err);
                 onResult(results);
             });
         });
     }
 
-    getServiceRatesForCategory(category) {
-    //    Is this useful?
+    getDailyServiceRatesForCategory(category, onResult) {
+        const sql = "SELECT neighborhood, rate, day FROM service_cases_daily WHERE category = ?";
+        this.perform(sql, [category], onResult);
+    }
+
+    getMonthlyServiceRates(onResult) {
+        const sql = "SELECT * FROM service_cases_monthly";
+        this.perform(sql, [], onResult);
+    }
+
+    getMonthlyIncidentRates(onResult) {
+        const sql = "SELECT * FROM incident_cases_monthly";
+        this.perform(sql, [], onResult);
+    }
+
+    getMonthlyServiceRatesForCategory(category, onResult) {
+        const sql = "SELECT neighborhood, `" + category + "` as rate FROM service_cases_monthly";
+        this.perform(sql, [], onResult);
+    }
+
+    getMonthlyIncidentRatesForCategory(category, onResult) {
+        const sql = "SELECT neighborhood, `" + category + "` as rate FROM incident_cases_monthly";
+        this.perform(sql, [], onResult);
+    }
+
+    getAvailableServiceCategories(onResult) {
+        const sql = "DESC service_cases_monthly";
+        this.perform(sql, [], results => {
+            results.splice(0, 2);
+            onResult(results.map(v => v.Field));
+        });
+    }
+
+    getAvailableIncidentCategories(onResult) {
+        const sql = "DESC incident_cases_monthly";
+        this.perform(sql, [], results => {
+            results.splice(0, 2);
+            onResult(results.map(v => v.Field));
+        });
+    }
+
+    getNeighborhoodClusters(onResult) {
+        const sql = "SELECT * FROM kmeans";
+        this.perform(sql, [], onResult);
     }
 }
 
