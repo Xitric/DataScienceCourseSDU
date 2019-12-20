@@ -9,30 +9,36 @@ from context.incident_modern_context import IncidentModernContext
 from util.string_hasher import string_hash
 
 
-# def save_to_hbase(rdd: RDD, ctx: IncidentModernContext):
-#     if not rdd.isEmpty():
-#         ctx.save_hbase(rdd.toDF())
-#
-#
-# def save_aggregation(rdd: RDD, ctx: IncidentAggregationContext):
-#     if not rdd.isEmpty():
-#         df = rdd.toDF()
-#         df = df.select(df["_1"].alias("neighborhood"),
-#                        df["_2"].alias("category"),
-#                        unix_timestamp(df["_3"]).cast(IntegerType()).alias("time"),
-#                        df["_4"].cast(IntegerType()).alias("count"))
-#
-#         # We need top define the UDF in here, since this function is executed on the workers whereas much of the code
-#         # outside of this function is executed on the driver
-#         hasher = udf(
-#             lambda value: string_hash(value),
-#             IntegerType()
-#         )
-#
-#         df = df.withColumn("neighborhood_id", hasher("neighborhood")) \
-#             .withColumn("category_id", hasher("category"))
-#
-#         ctx.save_hbase(df)
+def save_to_hbase(rdd: RDD, ctx: IncidentModernContext):
+    if not rdd.isEmpty():
+        ctx.save_hbase(rdd.toDF())
+
+
+def save_aggregation(rdd: RDD, ctx: IncidentAggregationContext):
+    if not rdd.isEmpty():
+        df = rdd.toDF()
+        df = df.select(df["_1"].alias("neighborhood"),
+                       df["_2"].alias("category"),
+                       unix_timestamp(df["_3"]).cast(IntegerType()).alias("time"),
+                       df["_4"].cast(IntegerType()).alias("count"))
+
+        # We need top define the UDF in here, since this function is executed on the workers whereas much of the code
+        # outside of this function is executed on the driver
+        hasher = udf(
+            lambda value: string_hash(value),
+            IntegerType()
+        )
+        #
+        # df = df.withColumn("neighborhood_id", hasher("neighborhood")) \
+        #     .withColumn("category_id", hasher("category"))
+
+        ctx.save_hbase(df)
+
+
+def save(rdd: RDD, ctx: IncidentModernContext):
+    if not rdd.isEmpty():
+        rdd.toDF().show(10, True)
+        save_to_hbase(rdd, ctx)
 
 
 if __name__ == "__main__":
@@ -46,8 +52,8 @@ if __name__ == "__main__":
     d_stream = incident_context.load_flume(ssc)
     d_stream.pprint()
 
-    # d_stream.foreachRDD(lambda rdd: save_to_hbase(rdd, incident_context))
-    #
+    d_stream.foreachRDD(lambda rdd: save(rdd, incident_context))
+
     # neighborhood_category_stream = d_stream.map(lambda row: (row.neighborhood, row.category))
     #
     # fifteen_minute_aggregate_stream = d_stream \
