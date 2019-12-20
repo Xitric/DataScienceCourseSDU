@@ -1,6 +1,8 @@
 //Data for graph
 let dataJson = document.getElementById('graph').innerHTML;
 let data = JSON.parse(dataJson);
+let serviceCategories = [];
+let incidentCategories = [];
 
 let spec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
@@ -29,6 +31,9 @@ let spec = {
                 "key": "neighborhood",
                 "fields": ["cluster"]
             }
+        },
+        {
+            "calculate": "datum.cluster === null ? 0 : datum.cluster", "as": "cluster"
         }],
     "mark": "geoshape",
     "encoding": {
@@ -42,5 +47,24 @@ let spec = {
         ]
     }
 };
+
+function serviceFilterChanged(checkbox) {
+    handleCheck(serviceCategories, checkbox.checked, checkbox.value);
+}
+
+function crimeFilterChanged(checkbox) {
+    handleCheck(incidentCategories, checkbox.checked, checkbox.value);
+}
+
+function handleCheck(array, checked, value) {
+    if (checked) {
+        array.push(value);
+    } else {
+        let index = array.indexOf(value);
+        if (index > -1) {
+            array.splice(index, 1);
+        }
+    }
+}
 
 vegaEmbed('#graphArea', spec);

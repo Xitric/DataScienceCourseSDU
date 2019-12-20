@@ -1,4 +1,5 @@
 let MySqlClient = require('../src/mysqlClient');
+let LivyClient = require('../src/livyClient');
 
 let express = require('express');
 let router = express.Router();
@@ -46,34 +47,53 @@ router.get('/choro', function (req, res) {
 
 router.get('/cluster', function (req, res) {
     let mysqlClient = new MySqlClient();
-    let data = [{"neighborhood": "Castro", cluster: 0},
-        {"neighborhood": "Diamond Heights", cluster: 0},
-        {"neighborhood": "Bayview", cluster: 1},
-        {"neighborhood": "Russian Hill", cluster: 0},
-        {"neighborhood": "Civic Center", cluster: 2},
-        {"neighborhood": "Nob Hill", cluster: 3},
-        {"neighborhood": "Excelsior", cluster: 3},
-        {"neighborhood": "Pacific Heights", cluster: 0}
-    ];
 
     mysqlClient.getAvailableServiceCategories(serviceCategories => {
         mysqlClient.getAvailableIncidentCategories(incidentCategories => {
-            res.render('vega_cluster', {
-                title: 'Cluster Visualization',
-                script: 'vega_vis_cluster',
-                layout: 'layout_vega',
-                serviceCategories: serviceCategories,
-                incidentCategories: incidentCategories,
-                data: data
+            mysqlClient.getNeighborhoodClusters(results => {
+                if (results) {
+                    res.render('vega_cluster', {
+                        title: 'Cluster Visualization',
+                        script: 'vega_vis_cluster',
+                        layout: 'layout_vega',
+                        stylesheets: ["style_graph"],
+                        serviceCategories: serviceCategories,
+                        incidentCategories: incidentCategories,
+                        data: data
+                    });
+                } else {
+                    res.render('vega_cluster', {
+                        title: 'Cluster Visualization',
+                        script: 'vega_vis_cluster',
+                        layout: 'layout_vega',
+                        stylesheets: ["style_graph"],
+                        serviceCategories: serviceCategories,
+                        incidentCategories: incidentCategories,
+                        data: []
+                    });
+                }
             });
         });
+    });
+});
+
+router.get('/cluster/submit', function (req, res) {
+    let livyClient = new LivyClient();
+
+    let serviceCategories = req.query.services.join(";").split(' ').join('+');
+    let incidentCategories = req.query.incidents.join(";").split(' ').join('+');
+
+    livyClient.batchSubmit('k-means', [serviceCategories, incidentCategories], body => {
+        //TODO: Save session id?
+        console.log(body);
+        res.redirect('/vega/cluster');
     });
 });
 
 router.get('/horizon', function (req, res) {
     let mysqlClient = new MySqlClient();
     mysqlClient.getDailyServiceRatesForCategory("Encampments", results => {
-        //TODO: Remove neighborhoods.txt
+        //TODO: Remove neighborhoods.txt and replace with database call
         res.render('vega_horizon', {
             title: 'Horizon Visualization',
             script: 'vega_vis_horizon',

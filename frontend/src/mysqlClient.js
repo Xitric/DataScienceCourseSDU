@@ -78,6 +78,11 @@ class MySqlClient {
             onResult(results.map(v => v.Field));
         });
     }
+
+    getNeighborhoodClusters(onResult) {
+        const sql = "SELECT * FROM kmeans";
+        this.perform(sql, [], onResult);
+    }
 }
 
 module.exports = MySqlClient;
