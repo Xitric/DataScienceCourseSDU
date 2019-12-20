@@ -38,7 +38,12 @@ class LivyClient {
         };
 
         request(options, function (err, res, body) {
-            onComplete(JSON.parse(body));
+            if (body == undefined) {
+                onComplete(body);
+            }
+            else {
+                onComplete(JSON.parse(body));
+            }
         });
     }
 }
