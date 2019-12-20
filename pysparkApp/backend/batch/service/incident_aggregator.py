@@ -27,6 +27,7 @@ if __name__ == "__main__":
         .agg(sum("count").alias("count"))
 
     daily_to_save = daily_df.withColumn("rate", (daily_df["count"] / daily_df["population_day"]).cast(FloatType())) \
+        .withColumnRenamed("incident_category", "category") \
         .drop("count") \
         .drop("population_day") \
         .drop("neighborhood_id") \
@@ -49,6 +50,7 @@ if __name__ == "__main__":
 
     monthly_to_save = monthly_df.withColumn("rate", (monthly_df["count"] / monthly_df["population_day"])
                                             .cast(FloatType())) \
+        .withColumnRenamed("incident_category", "category") \
         .drop("count") \
         .drop("population_day") \
         .drop("neighborhood_id") \
@@ -57,7 +59,7 @@ if __name__ == "__main__":
     # Convert many rows into one large row for each neighborhood that specifies rates for every category that month
     monthly_to_save = monthly_to_save \
         .groupBy("neighborhood", "month") \
-        .pivot("incident_category") \
+        .pivot("category") \
         .agg(first("rate").alias("rate"))
 
     monthly_to_save.show(10, False)
