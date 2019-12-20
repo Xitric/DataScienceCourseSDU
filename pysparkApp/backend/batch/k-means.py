@@ -7,6 +7,7 @@ from pyspark.ml.evaluation import ClusteringEvaluator
 
 # Used for calculating the optimal 
 def calculateKDist(df):
+    categories = categories_service + categories_incident
     vecAssembler = VectorAssembler(inputCols=categories, outputCol="features")
     new_df = vecAssembler.transform(df)
     # new_df.select("neighborhood", "features").show(10)
@@ -66,17 +67,14 @@ if __name__ == "__main__":
         combined_category = categories_service + categories_incident
     else:
         if args.catServ != "":
-            catString = args.catServ
+            catString = args.catServ.replace("+", " ")
 
             if args.catInci != "":
-                catString += "+" + args.catInci
+                catString += ";" + args.catInci.replace("+", " ")
         else:
-            catString = args.catInci
+            catString = args.catInci.replace("+", " ")
 
-        combined_category = catString.split('+')
-
-    
-    # combined_category = categories_service + categories_incident
+        combined_category = catString.split(';')
 
     spark = SparkSession.builder.getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
@@ -103,7 +101,6 @@ if __name__ == "__main__":
     # Generate a vector with all features to do k-mean analysis on
     vecAssembler = VectorAssembler(inputCols=combined_category, outputCol="features")
     new_df = vecAssembler.transform(df_comb)
-    # new_df.select("neighborhood", "features").show(10)
 
     # Make the k-means setup and use the fitting on the DataFrame
     kmeans = KMeans(k=6, seed=1, maxIter=50)
@@ -115,14 +112,14 @@ if __name__ == "__main__":
     # Select only what we need from the DataFrame
     df_cluster = df_trans.select("neighborhood", \
         df_trans["prediction"].alias("cluster"))
-        
-    # df_cluster.show(35)
-    df_cluster.sort("neighborhood", ascending=False).show(35)
+    
+    # For showing the result in the terminal
+    # df_cluster.sort("neighborhood", ascending=False).show(35)
 
     # Save to MySQL
-    # df_cluster.write.format('jdbc').options(
-    #     url='jdbc:mysql://mysql:3306/analysis_results',
-    #     driver='com.mysql.jdbc.Driver',
-    #     dbtable='kmeans',
-    #     user='spark',
-    #     password='P18YtrJj8q6ioevT').mode('overwrite').save()
+    df_cluster.write.format('jdbc').options(
+        url='jdbc:mysql://mysql:3306/analysis_results',
+        driver='com.mysql.jdbc.Driver',
+        dbtable='kmeans',
+        user='spark',
+        password='P18YtrJj8q6ioevT').mode('overwrite').save()
