@@ -28,19 +28,19 @@ class IncidentModernContext(Context):
 
     __catalog = ''.join("""{
             "table":{"namespace":"default", "name":"modern_incident_reports"},
-            "rowkey":"key_neighborhood:key_incident_category:key_incident_datetime:key_row_id",
+            "rowkey":"key_neighborhood:key_category:key_datetime:key_row_id",
             "columns":{
                 "neighborhood_id":{"cf":"rowkey", "col":"key_neighborhood", "type":"int"},
-                "incident_category_id":{"cf":"rowkey", "col":"key_incident_category", "type":"int"},
-                "incident_datetime":{"cf":"rowkey", "col":"key_incident_datetime", "type":"int"},
+                "category_id":{"cf":"rowkey", "col":"key_category", "type":"int"},
+                "opened":{"cf":"rowkey", "col":"key_datetime", "type":"int"},
                 "row_id":{"cf":"rowkey", "col":"key_row_id", "type":"int"},
                 
                 "neighborhood":{"cf":"a", "col":"neighborhood", "type":"string"},
-                "incident_category":{"cf":"a", "col":"incident_category", "type":"string"},
-                "incident_subcategory":{"cf":"a", "col":"incident_subcategory", "type":"string"},
-                "incident_datetime":{"cf":"a", "col":"incident_datetime", "type":"int"},
+                "category":{"cf":"a", "col":"category", "type":"string"},
+                "subcategory":{"cf":"a", "col":"subcategory", "type":"string"},
+                "opened":{"cf":"a", "col":"opened", "type":"int"},
                 "report_datetime":{"cf":"a", "col":"report_datetime", "type":"int"},
-                "incident_id":{"cf":"a", "col":"incident_id", "type":"string"},
+                "id":{"cf":"a", "col":"id", "type":"string"},
                 "resolution":{"cf":"a", "col":"resolution", "type":"string"},
                 
                 "intersection":{"cf":"l", "col":"intersection", "type":"string"},
@@ -74,12 +74,12 @@ class IncidentModernContext(Context):
         # Select the relevant columns
         incidents_df = incidents_df.select(
             string_to_hash("Row ID").alias("row_id"),
-            incidents_df["Incident Category"].alias("incident_category"),
-            string_to_hash("Incident Category").alias("incident_category_id"),
-            incidents_df["Incident Subcategory"].alias("incident_subcategory"),
-            unix_timestamp("Incident Datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType()).alias("incident_datetime"),
+            incidents_df["Incident Category"].alias("category"),
+            string_to_hash("Incident Category").alias("category_id"),
+            incidents_df["Incident Subcategory"].alias("subcategory"),
+            unix_timestamp("Incident Datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType()).alias("opened"),
             unix_timestamp("Report Datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType()).alias("report_datetime"),
-            incidents_df["Incident ID"].alias("incident_id"),
+            incidents_df["Incident ID"].alias("id"),
             incidents_df["Resolution"].alias("resolution"),
             incidents_df["Intersection"].alias("intersection"),
             incidents_df["Latitude"].cast(DoubleType()).alias("latitude"),

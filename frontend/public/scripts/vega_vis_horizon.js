@@ -2,118 +2,171 @@ let filter = "datum";
 let dataJson = document.getElementById('graph').innerHTML;
 let data = JSON.parse(dataJson);
 
-const vlSpec = {
-    "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
-    "datasets": {
-        "horizonData": data
-    },
-    "data": {
-        "name": "horizonData"
-    },
-    "transform": [
-        {"filter": filter}
-    ],
-    "facet": {
-        "row": {
-            "field": "neighborhood",
-            "type": "nominal",
-            "header": {
-                "title": "Neighborhoods",
-                "titleOrient": "top",
-                "titleFontSize": 24,
-                "labelAngle": 0,
-                "labelAlign": "left",
-                "labelFontSize": 16
-            }
-        }
-    },
-    "spec": {
-        "width": 400,
-        "height": 20,
-        "layer": [{
-            "mark": {"type": "area", "clip": true, "orient": "vertical"},
-            "encoding": {
-                "x": {
-                    "field": "day", "type": "temporal", "timeUnit": "yearmonthdate"
-                },
-                "y": {
-                    "field": "rate", "type": "quantitative",
-                    "scale": {"domain": [0, 0.5]},
-                    "axis": {
-                        "title": null,
-                        "labels": true
-                    }
-                },
-                "opacity": {"value": 0.5}
-            }
-        }, {
-            "transform": [
-                {
-                    "calculate": "datum.rate - 0.5",
-                    "as": "ny"
+let dataset = data[0]
+let category = data[2]
+
+// Generate the horizon graph schema
+function generateGraph(dataset, filter, maxScale) {
+    return {
+        "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+        "datasets": {
+            "horizonData": dataset
+        },
+        "data": {
+            "name": "horizonData"
+        },
+        "transform": [
+            {"filter": filter}
+        ],
+        "facet": {
+            "row": {
+                "field": "neighborhood",
+                "type": "nominal",
+                "header": {
+                    "title": "Neighborhoods" + ": " + category,
+                    "titleOrient": "top",
+                    "titleFontSize": 24,
+                    "labelAngle": 0,
+                    "labelAlign": "left",
+                    "labelFontSize": 16
                 }
-            ],
-            "mark": {"type": "area", "clip": true, "orient": "vertical"},
-            "encoding": {
-                "x": {
-                    "field": "day", "type": "temporal", "timeUnit": "yearmonthdate"
-                },
-                "y": {
-                    "field": "ny", "type": "quantitative",
-                    "scale": {"domain": [0, 0.5]}
-                },
-                "opacity": {"value": 0.3}
             }
-        }]
-    },
-    "config": {
-        "area": {"interpolate": "monotone"}
+        },
+        "spec": {
+            "width": 600,
+            "height": 40,
+            "layer": [{
+                "mark": {"type": "area", "clip": true, "orient": "vertical"},
+                "encoding": {
+                    "x": {
+                        "field": "day", "type": "temporal", "timeUnit": "yearmonthdate"
+                    },
+                    "y": {
+                        "field": "rate", "type": "quantitative",
+                        "scale": {"domain": [0, maxScale / 3.0]},
+                        "axis": {
+                            "title": null,
+                            "labels": true
+                        }
+                    },
+                    "opacity": {"value": 0.5}
+                }
+            }, {
+                "transform": [
+                    {
+                        "calculate": "datum.rate - " + maxScale / 3.0,
+                        "as": "ny"
+                    }
+                ],
+                "mark": {"type": "area", "clip": true, "orient": "vertical"},
+                "encoding": {
+                    "x": {
+                        "field": "day", "type": "temporal", "timeUnit": "yearmonthdate"
+                    },
+                    "y": {
+                        "field": "ny", "type": "quantitative",
+                        "scale": {"domain": [0, maxScale / 3.0]}
+                    },
+                    "opacity": {"value": 0.3}
+                }
+            }, {
+                "transform": [
+                    {
+                        "calculate": "datum.rate - " + maxScale * 2.0 / 3.0,
+                        "as": "ny"
+                    }
+                ],
+                "mark": {"type": "area", "clip": true, "orient": "vertical"},
+                "encoding": {
+                    "x": {
+                        "field": "day", "type": "temporal", "timeUnit": "yearmonthdate"
+                    },
+                    "y": {
+                        "field": "ny", "type": "quantitative",
+                        "scale": {"domain": [0, maxScale / 3.0]}
+                    },
+                    "opacity": {"value": 0.3}
+                }
+            }]
+        },
+        "config": {
+            "area": {"interpolate": "monotone"}
+        }
+    };
+}
+
+// Find the max rate to scale after
+function scaleRates(neighborhoods = null) {
+    let maxRate = 0.5;
+
+    if (neighborhoods == null) {
+        maxRate = Math.max.apply(Math,dataset.map(function(o){ return o.rate;}));
     }
-};
-
-function handleClick(cb) {
-    let temp = "";
-    if (cb.checked === true) {
-        let str = "datum.neighborhood != '" + cb.name + "'";
-        let length = str.length;
-        let index = filter.indexOf(str);
-
-        // The entry is the only one in the list
-        if (length === filter.length) {
-            filter = "datum";
-        }
-        // The entry is at the start of the list
-        else if (index === 0) {
-            filter = filter.substr(0, index) + filter.substr(index + length + 4);
-        }
-        // The entry is at the end of the list
-        else if (index + length === filter.length) {
-            filter = filter.substr(0, index - 4) + filter.substr(index + length);
-        }
-        // The entry is inside the list
-        else {
-            filter = filter.substr(0, index - 4) + filter.substr(index + length);
-        }
-
-        // The filter always has to filter something
-        if (filter.length < 1) {
-            filter = "datum";
-        }
-    } else {
-        temp += "datum.neighborhood != '" + cb.name + "'";
-
-        if (filter === "datum") {
-            filter = temp;
-        } else {
-            filter += " && " + temp;
-        }
-        console.log(temp);
+    else {
+        let tempNeigh = dataset.filter(function(o){
+            return neighborhoods.indexOf(o.neighborhood) >= 0;
+        });
+        maxRate = Math.max.apply(Math,tempNeigh.map(function(o){ return o.rate;}));
     }
 
-    console.log(filter);
+    return maxRate;
+}
 
-    vlSpec["transform"][0]["filter"] = filter;
+// Get all unchecked checkboxes
+function getCheckboxes() {
+    let checkboxes = document.getElementsByClassName('filterCheck');
+    let checkboxesChecked = [];
+    // loop over them all
+    for (let i=0; i<checkboxes.length; i++) {
+       // And stick the checked ones onto an array...
+       if (checkboxes[i].checked) {
+          checkboxesChecked.push(checkboxes[i].name);
+       }
+    }
+    // Return the array if it is non-empty, or null
+    return checkboxesChecked.length > 0 ? checkboxesChecked : null;
+}
+
+// Generate the filter from the checked checkboxes
+function generateFilter(checked) {
+    let currFilter = "";
+    let tempArr;
+
+    if (checked == null) {
+        currFilter = "!datum"
+    }
+    else {
+        tempArr = checked.slice();
+        tempArr.forEach((name, i, array) => {
+            array[i] = "datum.neighborhood == '" + name + "'";
+        });
+        currFilter = tempArr.join(" || ");
+    }
+
+    return currFilter;
+}
+
+// Receive a filter request from the user
+function submitFilters() {
+    let checked = getCheckboxes();
+
+    let currFilter = generateFilter(checked);
+
+    let rate = scaleRates(checked);
+    vlSpec = generateGraph(dataset, currFilter, rate);
     vegaEmbed('#vis', vlSpec);
+}
+
+// Toggles all the checkboxes on or off
+function checkAll(checktoggle) {
+    var checkboxes = new Array();
+    checkboxes = document.getElementsByClassName('filterCheck');
+
+    for (var i = 0; i < checkboxes.length; i++) {
+        if (checkboxes[i].type == 'checkbox') {
+            checkboxes[i].checked = checktoggle;
+        }
+    }
 }
 
 // Clicking dropdown button will toggle display
@@ -142,6 +195,35 @@ window.onclick = function (event) {
         }
     }
 };
+
+// Controls the radio buttions
+function typeChanged(radio) {
+    if (radio.value === "service") {
+        document.getElementById("incidentCategory").setAttribute("disabled", "disabled");
+        document.getElementById("incidentCategory").setAttribute("hidden", "hidden");
+        document.getElementById("serviceCategory").removeAttribute("disabled");
+        document.getElementById("serviceCategory").removeAttribute("hidden");
+    } else if (radio.value === "incident") {
+        document.getElementById("incidentCategory").removeAttribute("disabled");
+        document.getElementById("incidentCategory").removeAttribute("hidden");
+        document.getElementById("serviceCategory").setAttribute("disabled", "disabled");
+        document.getElementById("serviceCategory").setAttribute("hidden", "hidden");
+    }
+}
+
+// Changes the radio button to the currently loaded one
+if (data[1] == "incident") {
+    radiobtn = document.getElementById("radioInci");
+    radiobtn.checked = true;
+    typeChanged(radiobtn)
+}
+else {
+    radiobtn = document.getElementById("radioServ");
+    radiobtn.checked = true;
+    typeChanged(radiobtn)
+}
+
+let vlSpec = generateGraph(dataset, filter, scaleRates());
 
 // Embed the visualization in the container with id `vis`
 vegaEmbed('#vis', vlSpec);

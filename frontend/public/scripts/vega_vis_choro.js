@@ -49,15 +49,16 @@ let spec = {
     }
 };
 
+// Controls the radio buttions
 function typeChanged(radio) {
     if (radio.value === "service") {
-        document.getElementById("crimeCategory").setAttribute("disabled", "disabled");
-        document.getElementById("crimeCategory").setAttribute("hidden", "hidden");
+        document.getElementById("incidentCategory").setAttribute("disabled", "disabled");
+        document.getElementById("incidentCategory").setAttribute("hidden", "hidden");
         document.getElementById("serviceCategory").removeAttribute("disabled");
         document.getElementById("serviceCategory").removeAttribute("hidden");
-    } else if (radio.value === "crime") {
-        document.getElementById("crimeCategory").removeAttribute("disabled");
-        document.getElementById("crimeCategory").removeAttribute("hidden");
+    } else if (radio.value === "incident") {
+        document.getElementById("incidentCategory").removeAttribute("disabled");
+        document.getElementById("incidentCategory").removeAttribute("hidden");
         document.getElementById("serviceCategory").setAttribute("disabled", "disabled");
         document.getElementById("serviceCategory").setAttribute("hidden", "hidden");
     }

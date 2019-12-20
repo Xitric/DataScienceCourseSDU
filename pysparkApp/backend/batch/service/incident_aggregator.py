@@ -1,18 +1,15 @@
 from datetime import datetime, timedelta
 
-from geo_pyspark.register import GeoSparkRegistrator
-from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_unixtime, to_date, sum, lit, first
 from pyspark.sql.types import FloatType
 
 from batch.service.service_aggregator import python_date_format, java_date_format
 from context.incident.incident_running_aggregation_context import IncidentRunningAggregationContext
 from util.community_indicators import community_indicators
+from util.spark_session_utils import get_spark_session_instance
 
 if __name__ == "__main__":
-    spark = SparkSession.builder.getOrCreate()
-    spark.sparkContext.setLogLevel("WARN")
-    GeoSparkRegistrator.registerAll(spark)
+    spark = get_spark_session_instance()
 
     context = IncidentRunningAggregationContext()
     df = context.load_hbase(spark)
@@ -27,6 +24,7 @@ if __name__ == "__main__":
         .agg(sum("count").alias("count"))
 
     daily_to_save = daily_df.withColumn("rate", (daily_df["count"] / daily_df["population_day"]).cast(FloatType())) \
+        .withColumnRenamed("incident_category", "category") \
         .drop("count") \
         .drop("population_day") \
         .drop("neighborhood_id") \
@@ -38,7 +36,7 @@ if __name__ == "__main__":
         driver='com.mysql.jdbc.Driver',
         dbtable='incident_cases_daily',
         user='spark',
-        password='P18YtrJj8q6ioevT').mode('overwrite').save()
+        password='P18YtrJj8q6ioevT').mode('append').save()
 
     thisMonth = datetime.now().strftime(python_date_format)
     lastMonth = (datetime.now() - timedelta(days=30)).strftime(python_date_format)
@@ -49,6 +47,7 @@ if __name__ == "__main__":
 
     monthly_to_save = monthly_df.withColumn("rate", (monthly_df["count"] / monthly_df["population_day"])
                                             .cast(FloatType())) \
+        .withColumnRenamed("incident_category", "category") \
         .drop("count") \
         .drop("population_day") \
         .drop("neighborhood_id") \
@@ -57,7 +56,7 @@ if __name__ == "__main__":
     # Convert many rows into one large row for each neighborhood that specifies rates for every category that month
     monthly_to_save = monthly_to_save \
         .groupBy("neighborhood", "month") \
-        .pivot("incident_category") \
+        .pivot("category") \
         .agg(first("rate").alias("rate"))
 
     monthly_to_save.show(10, False)

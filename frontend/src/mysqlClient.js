@@ -43,6 +43,11 @@ class MySqlClient {
         this.perform(sql, [category], onResult);
     }
 
+    getDailyIncidentRatesForCategory(category, onResult) {
+        const sql = "SELECT neighborhood, rate, day FROM incident_cases_daily WHERE category = ?";
+        this.perform(sql, [category], onResult);
+    }
+
     getMonthlyServiceRates(onResult) {
         const sql = "SELECT * FROM service_cases_monthly";
         this.perform(sql, [], onResult);
@@ -82,6 +87,11 @@ class MySqlClient {
     getNeighborhoodClusters(onResult) {
         const sql = "SELECT * FROM kmeans";
         this.perform(sql, [], onResult);
+    }
+
+    getNeighborhoodNames(onResult) {
+        const sql = "SELECT DISTINCT neighborhood FROM service_cases_daily ORDER BY neighborhood";
+        this.perform(sql, [], onResult)
     }
 }
 

@@ -105,6 +105,7 @@ class ServiceCaseContext(Context):
                        df["CaseID"].cast(IntegerType()).alias("case_id"))
 
         # This would be optimal to include, but we do not have the processing power it requires!
+        # Therefore, we keep the neighborhood information that comes with service cases, to allow us to ingest more data
         # neighborhood_boundaries_df = neighborhood_boundaries(spark)
         # df = df.join(
         #     neighborhood_boundaries_df,
@@ -151,8 +152,7 @@ class ServiceCaseContext(Context):
             return rdd
         df = rdd.toDF()
 
-        # Since this method is invoked from a nested context where the SparkSession is not available, we must obtain it
-        # by other means
+        # Since this method is invoked from a nested context on a driver, we must access the global SparkSession
         spark = get_spark_session_instance(rdd.context.getConf())
         neighborhood_boundaries_df = neighborhood_boundaries(spark)
 

@@ -13,6 +13,11 @@ helpers = {
         return contents;
     },
 
+    formatNames: function (names) {
+        temp = JSON.parse(JSON.stringify(names));
+        return temp.map(x => x.neighborhood);
+    },
+
     jsonStringify: function (json) {
         return JSON.stringify(json);
     },

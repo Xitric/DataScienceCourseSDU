@@ -11,6 +11,7 @@ from pyspark.sql.types import FloatType, Row
 from context.service.service_running_aggregation_context import ServiceRunningAggregationContext
 from util.community_indicators import community_indicators
 from mysql.connector import (connection)
+from util.spark_session_utils import get_spark_session_instance
 
 java_date_format = "yyyy-MM-dd"
 python_date_format = "%Y-%m-%d"
@@ -40,10 +41,7 @@ def insert_into_db(row: Row):
 
 
 if __name__ == "__main__":
-    spark = SparkSession.builder.getOrCreate()
-    spark.sparkContext.setLogLevel("WARN")
-    spark.sparkContext.getConf().set("spark.executor.heartbeatInterval", "2000000")
-    GeoSparkRegistrator.registerAll(spark)
+    spark = get_spark_session_instance()
 
     timestamp_file_path = os.environ["CORE_CONF_fs_defaultFS"] + "/aggregator_timestamps/service.csv"
     service_timestamp = 0
