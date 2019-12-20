@@ -36,12 +36,6 @@ def save_aggregation(rdd: RDD, ctx: IncidentAggregationContext):
 
         ctx.save_hbase(df)
 
-
-def save(rdd: RDD, ctx: IncidentModernContext):
-    if not rdd.isEmpty():
-        #rdd.toDF().show(10, True)
-        save_to_hbase(rdd, ctx)
-
 if __name__ == "__main__":
     spark = SparkSession.builder.getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
@@ -51,19 +45,15 @@ if __name__ == "__main__":
 
     incident_context = IncidentModernContext()
     d_stream = incident_context.load_flume(ssc)
-    #d_stream.pprint()
 
-    d_stream.foreachRDD(lambda rdd: save(rdd, incident_context))
+    d_stream.foreachRDD(lambda rdd: save_to_hbase(rdd, incident_context))
 
     neighborhood_category_stream = d_stream.map(lambda row: (row.neighborhood, row.incident_category))
-
-   # neighborhood_category_stream.pprint()
 
     fifteen_minute_aggregate_stream = neighborhood_category_stream \
         .countByValueAndWindow(1, 1) \
         .transform(lambda time, rdd: rdd.map(lambda row: (row[0][0], row[0][1], time, row[1])))
 
-    #fifteen_minute_aggregate_stream.pprint()
     aggregation_context = IncidentAggregationContext()
     fifteen_minute_aggregate_stream.foreachRDD(lambda rdd: save_aggregation(rdd, aggregation_context))
 
