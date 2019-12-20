@@ -2,20 +2,55 @@
 
     <div id="vis"></div>
     {{!-- Because of the css, the menu will still be at the left side --}}
-    <div id="filters" class="dropdownmenu">
+    
+    
+    <div id="filters" class="filtersmenu">
 
-        <button onclick="btnToggle()" class="dropbutton">
-            Filters
-        </button>
+        <div id="filterArea">
+            <button onclick="btnToggle()" value="Filters" class="dropbutton">
+                Filters
+            </button>
+            <input type="button" value="Submit" onclick="submitFilters()">
 
-        <div id="fiDropdown" class="dropdownmenu-content" >
-            {{#each (formatNames data)}}
-                <div class="innerContainer">
-                    <input id="{{@index}}checkFilter" type="checkbox" name="{{this}}" onclick="handleClick(this);" checked="null" class="filterCheck"/>
-                    <label for="{{@index}}checkFilter">{{this}}</label>
+            <div id="fiDropdown" class="dropdownmenu-content" >
+                <div class="container">
+                    <input type="button" value="Clear All" class="toggleCB" onclick="checkAll(false)">
+                    <input type="button" value="Mark All" class="toggleCB" onclick="checkAll(true)">
                 </div>
-            {{/each}}
+                {{#each (formatNames data)}}
+                    <div class="innerContainer">
+                        <input id="{{@index}}checkFilter" type="checkbox" name="{{this}}" checked="null" class="filterCheck"/>
+                        <label for="{{@index}}checkFilter">{{this}}</label>
+                    </div>
+                {{/each}}
+            </div>
         </div>
+
+        <form class="filterForm">
+            <label>
+                <input type="radio" id="radioServ" name="type" value="service" checked="checked" onchange="typeChanged(this)"/>
+                Service cases
+            </label>
+            <label>
+                <input type="radio" id="radioInci" name="type" value="incident" onchange="typeChanged(this)"/>
+                Incident reports
+            </label>
+            <label>
+                <select id="serviceCategory" name="category">
+                    {{#each serviceCategories}}
+                        <option value="{{this}}">{{this}}</option>
+                    {{/each}}
+                </select>
+                <select id="incidentCategory" name="category" hidden="hidden" disabled="disabled">
+                    {{#each incidentCategories}}
+                        <option value="{{this}}">{{this}}</option>
+                    {{/each}}
+                </select>
+                Category
+            </label>
+            <input type="submit" value="Submit" onsubmit="submitFilters()">
+        </form>
+
     </div>
 </div>
 

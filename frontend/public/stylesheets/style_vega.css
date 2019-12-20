@@ -17,6 +17,10 @@
     display: block;
 }
 
+.toggleCB {
+    flex-grow: 1;
+}
+
 .dropbutton { 
     background-color: #4CAF50; 
     color: white; 
@@ -30,7 +34,7 @@
     background-color: #3e8e41; 
 } 
   
-.dropdownmenu { 
+.filtersmenu { 
     position: relative; 
     display: inline-block; 
     outline: none;

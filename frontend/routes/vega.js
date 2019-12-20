@@ -24,12 +24,12 @@ router.get('/choro', function (req, res) {
                         layout: 'layout_vega',
                         stylesheets: ["style_graph"],
                         serviceCategories: serviceCategories,
-                        crimeCategories: incidentCategories,
+                        incidentCategories: incidentCategories,
                         data: results,
                         category: category
                     });
                 });
-            } else if (type === "crime") {
+            } else if (type === "incident") {
                 mysqlClient.getMonthlyIncidentRatesForCategory(category, results => {
                     res.render('vega_choro', {
                         title: 'Choropleth Visualization',
@@ -37,7 +37,7 @@ router.get('/choro', function (req, res) {
                         layout: 'layout_vega',
                         stylesheets: ["style_graph"],
                         serviceCategories: serviceCategories,
-                        crimeCategories: incidentCategories,
+                        incidentCategories: incidentCategories,
                         data: results,
                         category: category
                     });
@@ -94,15 +94,41 @@ router.get('/cluster/submit', function (req, res) {
 
 router.get('/horizon', function (req, res) {
     let mysqlClient = new MySqlClient();
-    mysqlClient.getDailyServiceRatesForCategory("Encampments", horizonData => {
-        //TODO: Remove neighborhoods.txt and replace with database call
-        mysqlClient.getNeighborhoodNames(names => {
-            res.render('vega_horizon', {
-                title: 'Horizon Visualization',
-                script: 'vega_vis_horizon',
-                layout: 'layout_vega',
-                data: names, //'public/dataset/neighborhoods.txt',
-                horizonData: horizonData
+    let type = req.query.type || "service";
+    let category = req.query.category || "graffiti";
+
+    mysqlClient.getAvailableServiceCategories(serviceCategories => {
+        mysqlClient.getAvailableIncidentCategories(incidentCategories => {
+            mysqlClient.getNeighborhoodNames(names => {
+                if (type === "service") {
+                    mysqlClient.getDailyServiceRatesForCategory(category, horizonData => {
+                        res.render('vega_horizon', {
+                            title: 'Horizon Visualization',
+                            script: 'vega_vis_horizon',
+                            layout: 'layout_vega',
+                            serviceCategories: serviceCategories,
+                            incidentCategories: incidentCategories,
+                            data: names,
+                            horizonData: [horizonData, type, category],
+                            category: category,
+                            type: type
+                        });
+                    });
+                } else if (type === "incident") {
+                    mysqlClient.getDailyIncidentRatesForCategory(category, horizonData => {
+                        res.render('vega_horizon', {
+                            title: 'Horizon Visualization',
+                            script: 'vega_vis_horizon',
+                            layout: 'layout_vega',
+                            serviceCategories: serviceCategories,
+                            incidentCategories: incidentCategories,
+                            data: names,
+                            horizonData: [horizonData, type, category],
+                            category: category,
+                            type: type
+                        });
+                    });
+                }
             });
         });
     });
@@ -114,7 +140,7 @@ router.get('/scatter', function (req, res) {
         mysqlClient.getMonthlyIncidentRates(incidents => {
             let data = [services, incidents];
             res.render('vega_scatter', {
-                title: 'Crime and Service Correlations',
+                title: 'incident and Service Correlations',
                 script: 'vega_vis_scatter',
                 layout: 'layout_vega',
                 stylesheets: ["style_graph"],
