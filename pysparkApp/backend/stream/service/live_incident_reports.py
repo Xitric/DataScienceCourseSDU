@@ -4,8 +4,8 @@ from pyspark.sql.functions import unix_timestamp, udf
 from pyspark.sql.types import IntegerType
 from pyspark.streaming import StreamingContext
 
-from context.incident_aggregation_context import IncidentAggregationContext
 from context.incident.incident_modern_context import IncidentModernContext
+from context.incident.incident_running_aggregation_context import IncidentRunningAggregationContext
 from util.string_hasher import string_hash
 
 
@@ -14,7 +14,7 @@ def save_to_hbase(rdd: RDD, ctx: IncidentModernContext):
         ctx.save_hbase(rdd.toDF())
 
 
-def save_aggregation(rdd: RDD, ctx: IncidentAggregationContext):
+def save_aggregation(rdd: RDD, ctx: IncidentRunningAggregationContext):
     if not rdd.isEmpty():
         df = rdd.toDF()
 
@@ -41,21 +41,21 @@ if __name__ == "__main__":
     spark = SparkSession.builder.getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
 
-    ssc = StreamingContext(spark.sparkContext, 1)
+    ssc = StreamingContext(spark.sparkContext, 10)
     ssc.checkpoint("_checkpoint_incident")
 
     incident_context = IncidentModernContext()
     d_stream = incident_context.load_flume(ssc)
-
+    print(d_stream)
     d_stream.foreachRDD(lambda rdd: save_to_hbase(rdd, incident_context))
 
     neighborhood_category_stream = d_stream.map(lambda row: (row.neighborhood, row.category))
 
     fifteen_minute_aggregate_stream = neighborhood_category_stream \
-        .countByValueAndWindow(1, 1) \
+        .countByValueAndWindow(60, 60) \
         .transform(lambda time, rdd: rdd.map(lambda row: (row[0][0], row[0][1], time, row[1])))
 
-    aggregation_context = IncidentAggregationContext()
+    aggregation_context = IncidentRunningAggregationContext()
     fifteen_minute_aggregate_stream.foreachRDD(lambda rdd: save_aggregation(rdd, aggregation_context))
 
     ssc.start()
