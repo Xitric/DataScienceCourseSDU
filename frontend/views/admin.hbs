@@ -4,12 +4,14 @@
             <p>Upload</p>
         </div>
         <div class="dashboardCardContent">
-            <form action="/admin/upload" method="post" enctype="multipart/form-data">
+            <form class="columnForm" action="/admin/upload" method="post" enctype="multipart/form-data">
                 <label>
                     Select file to upload to HDFS:<br/>
                     <input type="file" name="file">
                 </label><br/>
-                 <label>
+
+                <label>Select type of file to upload. Driver <span class="code">.py</span> programs, <span class="code">.zip</span> archives of python libraries, and <span class="code">.jar</span> libraries are all of type "Spark application".</label>
+                <label>
                     <input type="radio" name="uploadType" value="app" checked="checked">
                     Spark application
                 </label><br/>
@@ -24,48 +26,57 @@
 
     <div class="dashboardCard">
         <div class="dashboardCardHead">
+            <p>Ingest data</p>
+        </div>
+        <div class="dashboardCardContent">
+            <form class="columnForm" action="/admin/ingest" method="post">
+                <label>Ingest historical data from csv files. Files should first be uploaded to HDFS. Note: This might be a very slow process.</label>
+                <label>
+                    <input type="radio" name="type" value="service"/>
+                    Service cases
+                </label>
+                <label>
+                    <input type="radio" name="type" value="historicalIncidents"/>
+                    Historical incident reports
+                </label>
+                <label>
+                    <input type="radio" name="type" value="modernIncidents"/>
+                    Modern incident reports
+                </label>
+                <button type="submit" value="Ingest Data">Ingest Data</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="dashboardCard">
+        <div class="dashboardCardHead">
             <p>Submit Spark application</p>
         </div>
         <div class="dashboardCardContent">
-            <form action="/admin/submit" method="post">
+            <form class="columnForm" action="/admin/submit" method="post">
                 <label>
                     Run application named
                     <input type="text" name="appName">
                 </label><br/>
                 <button type="submit" value="Submit">Submit</button>
 
-                <p>Note: Drivers for Spark applications must be uploaded to <span class="code">hdfs://namenode:9000/apps/</span> as Python <span class="code">.py</span> files. The code for all python files must be uploaded to the same directory as a single <span class="code">.zip</span> archive. Spark applications are executed by typing in the name of the driver excluding <span class="code">.py</span> in the text field above, such as <span class="code">live_service_cases</span>.</p>
-            </form>
-
-            <form action="/admin/update" method="get">
-                <button type="submit" value="Update">Update</button>
+                <p>Note: Drivers for Spark applications must be uploaded to <span class="code">hdfs://namenode:9000/apps/</span> as Python <span class="code">.py</span> files using the "Upload" segment above. The code for all python files must be uploaded to the same directory as a single <span class="code">.zip</span> archive. Jar libraries on which the Spark applications depend should also be uploaded. Spark applications are executed by typing in the name of the driver excluding <span class="code">.py</span> in the text field above, such as <span class="code">live_service_cases</span>.</p>
             </form>
         </div>
     </div>
 
-<!--    TODO-->
     <div class="dashboardCard">
         <div class="dashboardCardHead">
-            <p>Initialize</p>
+            <p>Spark job status</p>
         </div>
         <div class="dashboardCardContent">
-            <form action="/admin/ingest" method="post">
-                <button type="submit" value="Ingest Data">Ingest Data</button>
-                <label>Ingest historical data from csv files by using Spark Streaming</label>
-            </form>
-            {{#if livy}}
-                <form action="/admin/update" method="post">
-                    <button type="submit" value="Update">Update</button>
-                </form>
-
-                <p>Job: {{livy.id}}</p>
-                <p>Status: {{livy.state}}</p>
-                {{#if livy.output}}
-                    <p>Output: {{livy.output}}</p>
-                {{else}}
-                    <p>Output: None yet</p>
+            <form class="columnForm" action="/admin/update" method="get">
+                <button type="submit" value="Update">Update</button>
+                {{#if livy}}
+                    <label>Job: {{livy.id}}</label>
+                    <label>Status: {{livy.state}}</label>
                 {{/if}}
-            {{/if}}
+            </form>
         </div>
     </div>
 </div>

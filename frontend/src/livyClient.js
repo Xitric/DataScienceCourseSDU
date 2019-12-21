@@ -37,8 +37,8 @@ class LivyClient {
             method: "GET"
         };
 
-        request(options, function(err, res, body) {
-            onComplete(body);
+        request(options, function (err, res, body) {
+            onComplete(JSON.parse(body));
         });
     }
 }
