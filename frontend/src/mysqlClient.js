@@ -2,9 +2,8 @@ const mysql = require("mysql");
 
 class MySqlClient {
 
-    // TODO: Use environment variables
     constructor() {
-        this.host = "localhost";
+        this.host = "mysql";
         this.user = "client";
         this.password = "H8IAQzX236eu5Ep0";
         this.database = "analysis_results";
