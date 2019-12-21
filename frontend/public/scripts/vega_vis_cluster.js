@@ -52,7 +52,7 @@ function serviceFilterChanged(checkbox) {
     handleCheck(serviceCategories, checkbox.checked, checkbox.value);
 }
 
-function crimeFilterChanged(checkbox) {
+function incidentFilterChanged(checkbox) {
     handleCheck(incidentCategories, checkbox.checked, checkbox.value);
 }
 

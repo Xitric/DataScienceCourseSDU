@@ -248,17 +248,86 @@ router.get('/horizon', function (req, res) {
 
 router.get('/scatter', function (req, res) {
     let mysqlClient = new MySqlClient();
-    mysqlClient.getMonthlyServiceRates(services => {
-        mysqlClient.getMonthlyIncidentRates(incidents => {
-            let data = [services, incidents];
-            res.render('vega_scatter', {
-                title: 'incident and Service Correlations',
-                script: 'vega_vis_scatter',
-                layout: 'layout_vega',
-                stylesheets: ["style_graph"],
-                data: data
+    let livyClient = new LivyClient();
+    
+    let batchId = req.cookies.batchId;
+    let state;
+
+    livyClient.batchQuery(batchId, body => {
+        state = body.state;
+        
+        mysqlClient.getMonthlyServiceRates(services => {
+            mysqlClient.getMonthlyIncidentRates(incidents => {
+                mysqlClient.getCorrelation(results => {
+                    let data;
+                    if (results) {
+                        data = [services, incidents, results];
+                    }
+                    else {
+                        data = [services, incidents, []];
+                    }
+                    res.render('vega_scatter', {
+                        title: 'incident and Service Correlations',
+                        script: 'vega_vis_scatter',
+                        layout: 'layout_vega',
+                        stylesheets: ["style_graph"],
+                        data: data,
+                        state: state
+                    });
+                });
             });
         });
+    });
+});
+
+router.get('/scatter/submit', function (req, res) {
+    let livyClient = new LivyClient();
+    
+    let batchId = req.cookies.batchId;
+    let state;
+
+    livyClient.batchQuery(batchId, body => {
+        state = body.state;
+
+        if (state == "running") {
+            res.redirect('/vega/scatter');
+        }
+        else {
+            let serviceCategories = "";
+            let incidentCategories = "";
+
+            // Handles whether the req has a nothing, just a string, or an array
+            if (req.query.services != undefined) {
+                if (typeof(req.query.services) == "string") {
+                    serviceCategories = req.query.services;
+                }
+                else {
+                    serviceCategories = req.query.services.join(";").split(' ').join('+');
+                }
+            }
+            if (req.query.incidents != undefined) {
+                if (typeof(req.query.incidents) == "string") {
+                    incidentCategories = req.query.incidents;
+                }
+                else {
+                    incidentCategories = req.query.incidents.join(";").split(' ').join('+');
+                }
+            }
+
+            console.log(serviceCategories);
+            console.log(incidentCategories);
+
+            livyClient.batchSubmit("correlation", [serviceCategories, incidentCategories], body => {
+
+                // Save the current batch id in the cookie
+                res.cookie('batchId', body.id, {
+                    maxAge: 60*60*24,
+                    httpOnly: true
+                });
+
+                res.redirect('/vega/scatter');
+            });
+        }
     });
 });
 

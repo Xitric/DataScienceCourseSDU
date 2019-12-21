@@ -8,6 +8,20 @@
     flex-direction: row-reverse;
 }
 
+.innerContainerCorr {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 5;
+    justify-content: flex-start;
+}
+
+.innerContainerCorr > *:first-child {
+    margin: auto;
+    display:block;
+    text-align:center;
+}
+
+
 .containerState {
     display: flex;
     justify-content: space-around;

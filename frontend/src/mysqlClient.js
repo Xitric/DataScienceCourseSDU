@@ -89,6 +89,11 @@ class MySqlClient {
         this.perform(sql, [], onResult);
     }
 
+    getCorrelation(onResult) {
+        const sql = "SELECT * FROM correlation";
+        this.perform(sql, [], onResult);
+    }
+
     getNeighborhoodNames(onResult) {
         const sql = "SELECT DISTINCT neighborhood FROM service_cases_daily ORDER BY neighborhood";
         this.perform(sql, [], onResult)

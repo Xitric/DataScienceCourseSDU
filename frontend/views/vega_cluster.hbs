@@ -20,7 +20,7 @@
         <div class="filterForm">
             {{#each incidentCategories}}
                 <label>
-                    <input name="incidents" value="{{this}}" type="checkbox" onchange="crimeFilterChanged(this)"/>
+                    <input name="incidents" value="{{this}}" type="checkbox" onchange="incidentFilterChanged(this)"/>
                     {{this}}
                 </label>
             {{/each}}

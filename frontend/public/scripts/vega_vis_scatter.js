@@ -6,7 +6,7 @@ let crimeData = data[1];
 
 //Filters for graph
 let serviceCategories = [];
-let crimeCategories = [];
+let incidentCategories = [];
 
 const spec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
@@ -25,12 +25,12 @@ const spec = {
                 "name": "crime"
             },
             "key": "neighborhood",
-            "fields": crimeCategories
+            "fields": incidentCategories
         }
     }],
     "repeat": {
         "row": serviceCategories,
-        "column": crimeCategories
+        "column": incidentCategories
     },
     "spec": {
         "width": 150,
@@ -53,8 +53,8 @@ function serviceFilterChanged(checkbox) {
     handleCheck(serviceCategories, checkbox.checked, checkbox.value);
 }
 
-function crimeFilterChanged(checkbox) {
-    handleCheck(crimeCategories, checkbox.checked, checkbox.value);
+function incidentFilterChanged(checkbox) {
+    handleCheck(incidentCategories, checkbox.checked, checkbox.value);
 }
 
 function handleCheck(array, checked, value) {
@@ -67,7 +67,7 @@ function handleCheck(array, checked, value) {
         }
     }
 
-    if (serviceCategories.length > 0 && crimeCategories.length > 0) {
+    if (serviceCategories.length > 0 && incidentCategories.length > 0) {
         embedGraph();
     } else {
         removeGraph()

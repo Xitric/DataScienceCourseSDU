@@ -1,28 +1,49 @@
 <div id="graphContainer">
     <!--Filter pane-->
-    <div id="filterArea">
+    <form id="filterArea" action="scatter/submit" method="get">
+        <div class="containerState" >
+            <input type="submit" value="Calculate Clusters" onclick="submitForm"/>
+            <div id="state">{{state}}</div>
+        </div>
         <h2>Service categories</h2>
-        <form class="filterForm">
+        <div class="filterForm">
             {{#each (getCategories (getIndex (getIndex data 0) 0))}}
                 <label>
-                    <input value="{{this}}" type="checkbox" onchange="serviceFilterChanged(this)"/>
+                    <input name="services" value="{{this}}" type="checkbox" onchange="serviceFilterChanged(this)"/>
                     {{this}}
                 </label>
             {{/each}}
-        </form>
+        </div>
 
         <h2>Incident categories</h2>
-        <form class="filterForm">
+        <div class="filterForm">
             {{#each (getCategories (getIndex (getIndex data 1) 0))}}
                 <label>
-                    <input value="{{this}}" type="checkbox" onchange="crimeFilterChanged(this)"/>
+                    <input name="incidents" value="{{this}}" type="checkbox" onchange="incidentFilterChanged(this)"/>
                     {{this}}
                 </label>
             {{/each}}
-        </form>
-    </div>
+        </div>
+    </form>
 
-    <!--Graph-->
-    <div id="graphArea"></div>
+    <div class="innerContainerCorr">
+        
+        <table id="correlation">
+            <thead>
+                <th>Correlation</th>
+            </thead>
+            <tbody>
+                {{#each (formatCorr (getIndex data 2))}}
+                    <tr>
+                        {{#each this}}
+                            <td>{{this}}</td>
+                        {{/each}}
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        <!--Graph-->
+        <div id="graphArea"></div>
+    </div>
     <script id="graph" src='/scripts/{{script}}.js'>{{{jsonStringify data}}}</script>
 </div>
