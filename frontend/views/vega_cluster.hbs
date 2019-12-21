@@ -1,7 +1,10 @@
 <div id="graphContainer">
     <!--Filter pane-->
     <form id="filterArea" action="cluster/submit" method="get">
-        <input type="submit" value="Calculate Clusters"/>
+        <div class="containerState" >
+            <input type="submit" value="Calculate Clusters"/>
+            <div id="state">{{state}}</div>
+        </div>
 
         <h2>Service categories</h2>
         <div class="filterForm">
@@ -17,7 +20,7 @@
         <div class="filterForm">
             {{#each incidentCategories}}
                 <label>
-                    <input name="incidents" value="{{this}}" type="checkbox" onchange="crimeFilterChanged(this)"/>
+                    <input name="incidents" value="{{this}}" type="checkbox" onchange="incidentFilterChanged(this)"/>
                     {{this}}
                 </label>
             {{/each}}

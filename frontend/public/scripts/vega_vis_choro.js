@@ -1,7 +1,6 @@
 //Data for graph
 let dataJson = document.getElementById('graph').innerHTML;
 let data = JSON.parse(dataJson);
-console.log(data);
 
 let spec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
