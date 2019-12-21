@@ -36,19 +36,20 @@ def save_aggregation(rdd: RDD, ctx: IncidentAggregationContext):
 
         ctx.save_hbase(df)
 
+
 if __name__ == "__main__":
     spark = SparkSession.builder.getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
 
     ssc = StreamingContext(spark.sparkContext, 1)
-    ssc.checkpoint("_checkpoint")
+    ssc.checkpoint("_checkpoint_incident")
 
     incident_context = IncidentModernContext()
     d_stream = incident_context.load_flume(ssc)
 
     d_stream.foreachRDD(lambda rdd: save_to_hbase(rdd, incident_context))
 
-    neighborhood_category_stream = d_stream.map(lambda row: (row.neighborhood, row.incident_category))
+    neighborhood_category_stream = d_stream.map(lambda row: (row.neighborhood, row.category))
 
     fifteen_minute_aggregate_stream = neighborhood_category_stream \
         .countByValueAndWindow(1, 1) \

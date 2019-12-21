@@ -45,7 +45,7 @@ def save_aggregation(rdd: RDD, ctx: ServiceRunningAggregationContext):
 if __name__ == "__main__":
     spark = get_spark_session_instance()
     ssc = StreamingContext(spark.sparkContext, 10)  # Check for new data every 10 seconds
-    ssc.checkpoint("_checkpoint")
+    ssc.checkpoint("_checkpoint_service")
 
     service_context = ServiceCaseContext()
     dStream = service_context.load_flume(ssc)

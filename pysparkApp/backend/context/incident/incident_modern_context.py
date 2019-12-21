@@ -120,11 +120,11 @@ class IncidentModernContext(Context):
         # Make a Row object from the data
         row = Row(
             row_id=data_dict.get("row_id", ""),
-            incident_category=data_dict.get("incident_category", ""),
-            incident_subcategory=data_dict.get("incident_subcategory", ""),
-            incident_datetime=data_dict.get("incident_datetime", ""),
+            category=data_dict.get("incident_category", ""),
+            subcategory=data_dict.get("incident_subcategory", ""),
+            opened=data_dict.get("incident_datetime", ""),
             report_datetime=data_dict.get("report_datetime", ""),
-            incident_id=data_dict.get("incident_id", ""),
+            id=data_dict.get("incident_id", ""),
             resolution=data_dict.get("resolution", ""),
             intersection=data_dict.get("intersection", ""),
             latitude=float(data_dict.get("latitude", "0")),
@@ -157,9 +157,9 @@ class IncidentModernContext(Context):
 
         df = df \
             .withColumn("row_id", string_to_hash(df["row_id"])) \
-            .withColumn("incident_category_id", string_to_hash(df["incident_category"])) \
-            .withColumn("incident_datetime",
-                        unix_timestamp(to_timestamp("incident_datetime", "yyyy-MM-dd'T'HH:mm:ss.SSS")).cast(
+            .withColumn("category_id", string_to_hash(df["category"])) \
+            .withColumn("opened",
+                        unix_timestamp(to_timestamp("opened", "yyyy-MM-dd'T'HH:mm:ss.SSS")).cast(
                             IntegerType())) \
             .withColumn("report_datetime",
                         unix_timestamp(to_timestamp("report_datetime", "yyyy-MM-dd'T'HH:mm:ss.SSS")).cast(
