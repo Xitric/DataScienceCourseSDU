@@ -13,3 +13,8 @@
 .dashboardCardHead p {
     margin: 8px;
 }
+
+.columnForm {
+    display: flex;
+    flex-direction: column;
+}
