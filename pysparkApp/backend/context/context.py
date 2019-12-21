@@ -14,5 +14,9 @@ class Context:
     def load_hbase(self, spark: SparkSession) -> DataFrame:
         pass
 
+    def load_hbase_timestamp(self, spark: SparkSession, timestamp: int) -> DataFrame:
+        pass
+
     def save_hbase(self, df: DataFrame):
         pass
+
