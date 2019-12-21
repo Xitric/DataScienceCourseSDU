@@ -124,6 +124,7 @@ class IncidentModernContext(Context):
             subcategory=data_dict.get("incident_subcategory", ""),
             opened=data_dict.get("incident_datetime", ""),
             report_datetime=data_dict.get("report_datetime", ""),
+            neighborhood=data_dict.get("analysis_neighborhood"),
             id=data_dict.get("incident_id", ""),
             resolution=data_dict.get("resolution", ""),
             intersection=data_dict.get("intersection", ""),
@@ -147,13 +148,13 @@ class IncidentModernContext(Context):
         spark = get_spark_session_instance(rdd.context.getConf())
         neighborhood_boundaries_df = neighborhood_boundaries(spark)
 
-        df = df.join(
-            neighborhood_boundaries_df,
-            is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
-            "cross"
-        )
-
-        df = df.drop("polygon")
+        # df = df.join(
+        #     neighborhood_boundaries_df,
+        #     is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
+        #     "cross"
+        # )
+        #
+        # df = df.drop("polygon")
 
         df = df \
             .withColumn("row_id", string_to_hash(df["row_id"])) \

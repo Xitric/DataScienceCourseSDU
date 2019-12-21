@@ -136,6 +136,7 @@ class ServiceCaseContext(Context):
                    request_details=data_dict.get("service_details", ""),
                    address=data_dict.get("address", ""),
                    street=data_dict.get("street", ""),
+                   neighborhood=data_dict.get("neighborhood", ""),
                    latitude=float(data_dict.get("lat", "0")),
                    longitude=float(data_dict.get("long", "0")),
                    responsible_agency=data_dict.get("agency_responsible", ""),
@@ -158,14 +159,14 @@ class ServiceCaseContext(Context):
 
         # Find neighborhoods from lat/lon
         # This is necessary, because a lot of the data from the API is missing neighborhood data
-        df = df.join(
-            neighborhood_boundaries_df,
-            is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
-            "cross"
-        )
-
-        # Clean up after join
-        df = df.drop("polygon")
+        # df = df.join(
+        #     neighborhood_boundaries_df,
+        #     is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
+        #     "cross"
+        # )
+        #
+        # # Clean up after join
+        # df = df.drop("polygon")
 
         # Add key data and parse dates
         df = df.withColumn("category_id", hasher("category")) \
