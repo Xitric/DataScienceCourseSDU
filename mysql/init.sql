@@ -20,63 +20,44 @@ CREATE DATABASE flume;
 -- Set up database for analysis results
 USE analysis_results;
 
-create table service_cases_daily
-(
-	neighborhood varchar(128) not null,
-	category varchar(256) not null,
-	rate double not null,
-	day date not null,
-	constraint service_cases_daily_pk
-		primary key (neighborhood, category, day)
+create table service_cases_daily(
+	`neighborhood` varchar(128) not null,
+	`category` varchar(256) not null,
+	`rate` double precision not null,
+	`day` date not null,
+	primary key (`neighborhood`, `category`, `day`)
 );
 
-create index service_cases_daily_day_category_index
-	on service_cases_daily (day desc, category asc);
-
-create table service_cases_monthly
-(
-	neighborhood varchar(128) not null,
-	category varchar(256) not null,
-	rate double not null,
-	month DATE not null,
-	constraint service_cases_monthly_pk
-		primary key (neighborhood, category, month)
+create table service_cases_monthly(
+	`neighborhood` varchar(128) not null,
+	`category` varchar(256) not null,
+	`rate` double precision not null,
+	`month` DATE not null,
+	primary key (`neighborhood`, `category`, `month`)
 );
-
-create index service_cases_monthly_month_index
-	on service_cases_monthly (month desc);
 
 create table incident_cases_daily
 (
-	neighborhood varchar(128) not null,
-	category varchar(256) not null,
-	rate double not null,
-	day date not null,
-	constraint incident_cases_daily_pk
-		primary key (neighborhood, category, day)
+	`neighborhood` varchar(128) not null,
+	`category` varchar(256) not null,
+	`rate` double precision not null,
+	`day` date not null,
+	primary key (`neighborhood`, `category`, `day`)
 );
-
-create index incident_cases_daily_day_category_index
-	on incident_cases_daily (day desc, category asc);
 
 create table incident_cases_monthly
 (
-	neighborhood varchar(128) not null,
-	category varchar(256) not null,
-	rate double not null,
-	month DATE not null,
-	constraint incident_cases_monthly_pk
-		primary key (neighborhood, category, month)
+	`neighborhood` varchar(128) not null,
+	`category` varchar(256) not null,
+	`rate` double precision not null,
+	`month` DATE not null,
+	primary key (`neighborhood`, `category`, `month`)
 );
-
-create index incident_cases_monthly_month_index
-	on incident_cases_monthly (month desc);
 
 -- Set up database for flume
 USE flume;
-create table data_ingestion_latest
-(
-    data_source char(9)  not null
-        primary key,
-    latest      datetime not null
+
+create table data_ingestion_latest(
+	`data_source` char(9) not null primary key,
+	`latest` datetime not null
 );

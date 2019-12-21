@@ -198,6 +198,7 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 		private void broadcast() {
 			while (! bufferedEvents.isEmpty()) {
 				Event event = bufferedEvents.poll().event;
+
 				//Schedule event 24 hours late 
 				DateTime eventTime = DateTime.parse(event.getHeaders().get("time")).plusDays(1); 
 
@@ -220,7 +221,6 @@ public class SFGovSource extends AbstractSource implements EventDrivenSource, Co
 					//TODO: Handle this better 
 					continue; 
 				} 
-
 				channelProcessor.processEvent(event);
 				logger.info("SFGovSource sending event at time " + nextRun.toString());
 			}
