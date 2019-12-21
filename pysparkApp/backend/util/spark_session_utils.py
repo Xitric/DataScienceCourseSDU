@@ -11,6 +11,7 @@ def get_spark_session_instance(spark_conf: SparkConf = None):
             builder = builder.config(conf=spark_conf)
         spark = builder.getOrCreate()
         spark.sparkContext.setLogLevel("WARN")
+        spark.sparkContext.getConf().set("spark.executor.heartbeatInterval", "2000000")
         GeoSparkRegistrator.registerAll(spark)
         globals()["sparkSessionSingletonInstance"] = spark
     return globals()["sparkSessionSingletonInstance"]

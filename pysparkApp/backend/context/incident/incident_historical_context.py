@@ -85,9 +85,6 @@ class IncidentHistoricalContext(Context):
 
         return df
 
-    def load_flume(self, ssc: StreamingContext) -> DStream:
-        pass
-
     def load_hbase(self, session: SparkSession) -> DataFrame:
         return session.read.options(catalog=self.__catalog).format(self._data_source_format).load()
 

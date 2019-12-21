@@ -1,6 +1,7 @@
 data/
 .vscode/
 .idea/
+.DS_Store
 node_modules/
 __pycache__/
 flume/components/target/

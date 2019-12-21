@@ -36,6 +36,24 @@ create table service_cases_monthly(
 	primary key (`neighborhood`, `category`, `month`)
 );
 
+create table incident_cases_daily
+(
+	`neighborhood` varchar(128) not null,
+	`category` varchar(256) not null,
+	`rate` double precision not null,
+	`day` date not null,
+	primary key (`neighborhood`, `category`, `day`)
+);
+
+create table incident_cases_monthly
+(
+	`neighborhood` varchar(128) not null,
+	`category` varchar(256) not null,
+	`rate` double precision not null,
+	`month` DATE not null,
+	primary key (`neighborhood`, `category`, `month`)
+);
+
 -- Set up database for flume
 USE flume;
 
