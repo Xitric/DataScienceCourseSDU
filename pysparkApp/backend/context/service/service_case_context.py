@@ -105,6 +105,7 @@ class ServiceCaseContext(Context):
                        df["CaseID"].cast(IntegerType()).alias("case_id"))
 
         # This would be optimal to include, but we do not have the processing power it requires!
+        # Therefore, we keep the neighborhood information that comes with service cases, to allow us to ingest more data
         # neighborhood_boundaries_df = neighborhood_boundaries(spark)
         # df = df.join(
         #     neighborhood_boundaries_df,
@@ -135,6 +136,7 @@ class ServiceCaseContext(Context):
                    request_details=data_dict.get("service_details", ""),
                    address=data_dict.get("address", ""),
                    street=data_dict.get("street", ""),
+                   neighborhood=data_dict.get("neighborhood", ""),
                    latitude=float(data_dict.get("lat", "0")),
                    longitude=float(data_dict.get("long", "0")),
                    responsible_agency=data_dict.get("agency_responsible", ""),
@@ -151,27 +153,26 @@ class ServiceCaseContext(Context):
             return rdd
         df = rdd.toDF()
 
-        # Since this method is invoked from a nested context where the SparkSession is not available, we must obtain it
-        # by other means
+        # Since this method is invoked from a nested context on a driver, we must access the global SparkSession
         spark = get_spark_session_instance(rdd.context.getConf())
         neighborhood_boundaries_df = neighborhood_boundaries(spark)
 
         # Find neighborhoods from lat/lon
         # This is necessary, because a lot of the data from the API is missing neighborhood data
-        df = df.join(
-            neighborhood_boundaries_df,
-            is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
-            "cross"
-        )
-
-        # Clean up after join
-        df = df.drop("polygon")
+        # df = df.join(
+        #     neighborhood_boundaries_df,
+        #     is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
+        #     "cross"
+        # )
+        #
+        # # Clean up after join
+        # df = df.drop("polygon")
 
         # Add key data and parse dates
         df = df.withColumn("category_id", hasher("category")) \
             .withColumn("neighborhood_id", hasher("neighborhood")) \
-            .withColumn("opened", unix_timestamp(to_timestamp("openedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS"))) \
-            .withColumn("updated", unix_timestamp(to_timestamp("updatedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS"))) \
+            .withColumn("opened", unix_timestamp(to_timestamp("openedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS")).cast(IntegerType())) \
+            .withColumn("updated", unix_timestamp(to_timestamp("updatedStr", "yyyy-MM-dd'T'HH:mm:ss.SSS")).cast(IntegerType())) \
             .drop("openedStr", "updatedStr")
 
         return df.rdd

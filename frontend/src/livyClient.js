@@ -26,7 +26,7 @@ class LivyClient {
             }
         };
 
-        request(options, function (err, res, body) {
+        request(options, function(err, res, body) {
             onComplete(body);
         });
     }

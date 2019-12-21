@@ -3,19 +3,18 @@ import os
 from geo_pyspark.sql.types import GeometryType
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import udf
-from pyspark.sql.types import BooleanType
+from pyspark.sql.types import BooleanType, FloatType, ArrayType
 from shapely.geometry import Polygon, Point
 
 # True if the latitude and longitude is in the neighborhood represented as a Polygon
 is_neighborhood_in_polygon = udf(
-    lambda latitude, longitude, polygon_object:
-    polygon_object.contains(Point(float(latitude), float(longitude))),
+    lambda latitude, longitude, points:
+    Polygon(points).contains(Point(float(latitude), float(longitude))),
     BooleanType()
 )
 
 polygon = udf(
-    lambda neighborhood_boundary_string: create_polygon(neighborhood_boundary_string),
-    GeometryType()
+    lambda neighborhood_boundary_string: create_polygon(neighborhood_boundary_string), GeometryType()
 )
 
 

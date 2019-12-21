@@ -7,6 +7,7 @@ RUN python -m pip install pyspark
 RUN python -m pip install shapely
 RUN python -m pip install pandas
 RUN python -m pip install wheel
+RUN python3.7 -m pip install mysql-connector-python
 COPY geo_pyspark-0.2.0-py3-none-any.whl /
 RUN python -m pip install geo_pyspark-0.2.0-py3-none-any.whl
 

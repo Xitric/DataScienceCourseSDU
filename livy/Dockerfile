@@ -17,6 +17,7 @@ COPY livy.conf $LIVY_CONF_DIR
 
 EXPOSE 8998
 EXPOSE 4000
+EXPOSE 4001
 
 ADD run.sh /run.sh
 RUN chmod a+x /run.sh
