@@ -1,5 +1,4 @@
 # From: http://spark.apache.org/docs/latest/streaming-programming-guide.html#dataframe-and-sql-operations
-from geo_pyspark.register import GeoSparkRegistrator
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 
@@ -12,6 +11,5 @@ def get_spark_session_instance(spark_conf: SparkConf = None):
         spark = builder.getOrCreate()
         spark.sparkContext.setLogLevel("WARN")
         spark.sparkContext.getConf().set("spark.executor.heartbeatInterval", "2000000")
-        GeoSparkRegistrator.registerAll(spark)
         globals()["sparkSessionSingletonInstance"] = spark
     return globals()["sparkSessionSingletonInstance"]

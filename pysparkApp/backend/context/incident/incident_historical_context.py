@@ -3,13 +3,12 @@ import os
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import udf, unix_timestamp
 from pyspark.sql.types import IntegerType, DoubleType, LongType
-from pyspark.streaming import StreamingContext, DStream
 
 from context.context import Context
-from util.neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
+from util.neighborhood_boundaries import add_neighborhoods
 from util.string_hasher import string_hash
 
-string_to_hash = udf(
+hasher = udf(
     lambda string: string_hash(string),
     IntegerType()
 )
@@ -55,7 +54,7 @@ class IncidentHistoricalContext(Context):
         df = df.select(
             df["PdId"].cast(LongType()).alias("pd_id"),
             df["Category"].alias("category"),
-            string_to_hash("Category").alias("category_id"),
+            hasher("Category").alias("category_id"),
             unix_timestamp("Date", "MM/dd/yyyy").cast(IntegerType()).alias("date"),
             unix_timestamp("Time", "HH:mm").cast(IntegerType()).alias("time"),
             df["Resolution"].alias("resolution"),
@@ -73,15 +72,8 @@ class IncidentHistoricalContext(Context):
             .drop("time")
 
         # Join df and neighborhood_boundaries_df if latitude and longitude is in the polygon
-        neighborhood_boundaries_df = neighborhood_boundaries(spark)
-        df = df.join(
-            neighborhood_boundaries_df,
-            is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
-            "cross"
-        )
-
-        df = df.drop("polygon")
-        df = df.withColumn("neighborhood_id", string_to_hash(df["neighborhood"]))
+        df = add_neighborhoods(df)
+        df = df.withColumn("neighborhood_id", hasher(df["neighborhood"]))
 
         return df
 

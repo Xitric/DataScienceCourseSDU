@@ -9,11 +9,10 @@ from pyspark.streaming import StreamingContext, DStream
 from pyspark.streaming.flume import FlumeUtils
 
 from context.context import Context
-from util.neighborhood_boundaries import neighborhood_boundaries, is_neighborhood_in_polygon
-from util.spark_session_utils import get_spark_session_instance
+from util.neighborhood_boundaries import add_neighborhoods
 from util.string_hasher import string_hash
 
-string_to_hash = udf(
+hasher = udf(
     lambda string: string_hash(string),
     IntegerType()
 )
@@ -61,8 +60,7 @@ class IncidentModernContext(Context):
             .option("header", "true") \
             .option("multiline", "true") \
             .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS") \
-            .load(self.__incident_modern_file) \
-            .limit(10)
+            .load(self.__incident_modern_file)
 
         # Remove rows missing category or location information
         incidents_df = incidents_df.where(
@@ -73,9 +71,9 @@ class IncidentModernContext(Context):
 
         # Select the relevant columns
         incidents_df = incidents_df.select(
-            string_to_hash("Row ID").alias("row_id"),
+            hasher("Row ID").alias("row_id"),
             incidents_df["Incident Category"].alias("category"),
-            string_to_hash("Incident Category").alias("category_id"),
+            hasher("Incident Category").alias("category_id"),
             incidents_df["Incident Subcategory"].alias("subcategory"),
             unix_timestamp("Incident Datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType()).alias("opened"),
             unix_timestamp("Report Datetime", "yyyy/MM/dd hh:mm:ss a").cast(IntegerType()).alias("report_datetime"),
@@ -91,17 +89,9 @@ class IncidentModernContext(Context):
             incidents_df["Supervisor District"].alias("supervisor_district")
         )
 
-        neighborhood_boundaries_df = neighborhood_boundaries(spark)
-
-        # Join incident_modern_df and neighborhood_boundaries_df if latitude and longitude is in the polygon
-        incidents_df = incidents_df.join(
-            neighborhood_boundaries_df,
-            is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
-            "cross"
-        )
-
-        incidents_df = incidents_df.drop("polygon")
-        incidents_df = incidents_df.withColumn("neighborhood_id", string_to_hash(incidents_df["neighborhood"]))
+        # Add neighborhood column
+        incidents_df = add_neighborhoods(incidents_df)
+        incidents_df = incidents_df.withColumn("neighborhood_id", hasher(incidents_df["neighborhood"]))
 
         return incidents_df
 
@@ -124,7 +114,6 @@ class IncidentModernContext(Context):
             subcategory=data_dict.get("incident_subcategory", ""),
             opened=data_dict.get("incident_datetime", ""),
             report_datetime=data_dict.get("report_datetime", ""),
-            neighborhood=data_dict.get("analysis_neighborhood"),
             id=data_dict.get("incident_id", ""),
             resolution=data_dict.get("resolution", ""),
             intersection=data_dict.get("intersection", ""),
@@ -145,28 +134,18 @@ class IncidentModernContext(Context):
 
         df = rdd.toDF()
 
-        spark = get_spark_session_instance(rdd.context.getConf())
-        neighborhood_boundaries_df = neighborhood_boundaries(spark)
+        df = add_neighborhoods(df)
 
-        # df = df.join(
-        #     neighborhood_boundaries_df,
-        #     is_neighborhood_in_polygon("latitude", "longitude", "polygon"),
-        #     "cross"
-        # )
-        #
-        # df = df.drop("polygon")
-
-        df = df \
-            .withColumn("row_id", string_to_hash(df["row_id"])) \
-            .withColumn("category_id", string_to_hash(df["category"])) \
+        df = df.withColumn("row_id", hasher(df["row_id"])) \
+            .withColumn("category_id", hasher(df["category"])) \
             .withColumn("opened",
                         unix_timestamp(to_timestamp("opened", "yyyy-MM-dd'T'HH:mm:ss.SSS")).cast(
                             IntegerType())) \
             .withColumn("report_datetime",
                         unix_timestamp(to_timestamp("report_datetime", "yyyy-MM-dd'T'HH:mm:ss.SSS")).cast(
                             IntegerType())) \
-            .withColumn("neighborhood_id", string_to_hash(df["neighborhood"]))
-        
+            .withColumn("neighborhood_id", hasher(df["neighborhood"]))
+
         return df.rdd
 
     def load_hbase(self, session: SparkSession) -> DataFrame:

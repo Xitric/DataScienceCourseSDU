@@ -3,11 +3,12 @@ import os
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import substring_index, udf
 from pyspark.sql.types import FloatType
+from shapely.geometry import Polygon
 
 from util.neighborhood_boundaries import neighborhood_boundaries
 
 calculate_area = udf(
-    lambda polygon: polygon.area,
+    lambda polygon: Polygon(polygon).area,
     FloatType()
 )
 
