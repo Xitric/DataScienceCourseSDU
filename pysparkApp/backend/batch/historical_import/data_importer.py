@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import udf, count
 from pyspark.sql.types import IntegerType
@@ -32,9 +34,12 @@ def get_batch_processed(df: DataFrame) -> DataFrame:
 
 def import_data(context: Context, spark: SparkSession, aggregator: AggregationContext, limit: int = 50000):
     # Store in HBase for further batch processing
-    csv = load_newest(context, spark).limit(limit)
-    context.save_hbase(csv)
+    csv = load_newest(context, spark)
+    # context.save_hbase(csv)
+    print("Start: " + str(datetime.now()))
+    csv.write.format("csv").save("/results/data.csv")
+    print("End: " + str(datetime.now()))
 
     # Batch process 15 minute intervals
-    aggregated = get_batch_processed(csv)
-    aggregator.save_hbase(aggregated)
+    # aggregated = get_batch_processed(csv)
+    # aggregator.save_hbase(aggregated)
