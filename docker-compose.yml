@@ -239,6 +239,16 @@ services:
       cscourse:
         ipv4_address: 172.200.0.40
 
+  frontend:
+    image: xitric/frontend:latest
+    container_name: frontend
+    restart: on-failure
+    ports:
+      - 3000:3000
+    networks:
+      cscourse:
+        ipv4_address: 172.200.0.41
+
   mysql:
     image: xitric/sfdb:latest
     container_name: mysql
