@@ -75,7 +75,7 @@ def aggregate(data_type: str, ctx: Context):
     date_in_seconds = int((latest_date - datetime.utcfromtimestamp(0)).total_seconds())
     print(date_in_seconds)
 
-    # Save to MySQL if there is no timestamp
+    # Create new table in MySQL if there is no timestamp
     if latest_timestamp == 0:
         daily_to_save.write.format('jdbc').options(
             url='jdbc:mysql://mysql:3306/analysis_results',
@@ -86,7 +86,7 @@ def aggregate(data_type: str, ctx: Context):
     else:
         daily_to_save.foreach(lambda row: insert_into_db(row, data_type))
 
-    timestamp_df = spark.createDataFrame([(date_in_seconds,)], ["date"])  # spark expects a tuple
+    timestamp_df = spark.createDataFrame([(date_in_seconds,)], ["date"])  # Spark expects a tuple
     timestamp_df.repartition(1).write.format("csv").mode("overwrite").save(
         "/aggregator_timestamps/" + data_type + ".csv")
 

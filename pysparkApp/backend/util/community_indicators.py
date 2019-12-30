@@ -15,12 +15,14 @@ calculate_area = udf(
 
 def community_indicators(spark: SparkSession) -> DataFrame:
     indicators_file = os.environ["CORE_CONF_fs_defaultFS"] + "/datasets/Community_Resiliency_Indicator_System.csv"
+
+    # Read csv file
     indicators = spark.read \
         .format("csv") \
         .option("header", "true") \
-        .load(indicators_file)
+        .load(indicators_file) \
+        .cache()
 
-    # Read csv file
     indicators = indicators.select(indicators["Neighborhood"].alias("neighborhood"),
                                    indicators["Haz_Score"].alias("hazard_score"),
                                    indicators["Env_Score"].alias("environment_score"),
