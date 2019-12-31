@@ -6,6 +6,7 @@ from pyspark.sql.types import IntegerType
 
 from context.aggregation_context import AggregationContext
 from context.context import Context
+from util.flume_ingestion_times import update_ingestion_times
 
 truncate_time = udf(
     lambda precise_time: int(precise_time / 900) * 900,
@@ -32,13 +33,18 @@ def get_batch_processed(df: DataFrame) -> DataFrame:
                              aggregated["count"].cast(IntegerType()).alias("count"))
 
 
-def import_data(context: Context, spark: SparkSession, aggregator: AggregationContext, limit: int = 50000):
+def import_data(context: Context, spark: SparkSession, aggregator: AggregationContext, data_source: str,
+                limit: int = 50000):
     # Store in HBase for further batch processing
     print("Start: " + str(datetime.now()))
     csv = load_newest(context, spark)
     context.save_hbase(csv)
     print("End: " + str(datetime.now()))
 
+    # Update ingestion times for Flume
+    latest = datetime.fromtimestamp(csv.first()["opened"])
+    update_ingestion_times(data_source, latest)
+
     # Batch process 15 minute intervals
-    # aggregated = get_batch_processed(csv)
-    # aggregator.save_hbase(aggregated)
+    aggregated = get_batch_processed(csv)
+    aggregator.save_hbase(aggregated)

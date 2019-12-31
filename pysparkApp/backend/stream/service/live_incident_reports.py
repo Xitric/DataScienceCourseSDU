@@ -4,5 +4,6 @@ from stream.service.live_ingester import ingest
 
 if __name__ == "__main__":
     ingest("incident",
+           "wg3w-h783",
            IncidentModernContext(),
            IncidentRunningAggregationContext())

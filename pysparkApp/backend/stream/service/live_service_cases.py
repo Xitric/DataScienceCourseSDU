@@ -4,5 +4,6 @@ from stream.service.live_ingester import ingest
 
 if __name__ == "__main__":
     ingest("service",
+           "vw6y-z8j6",
            ServiceCaseContext(),
            ServiceRunningAggregationContext())

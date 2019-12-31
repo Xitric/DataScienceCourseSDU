@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pyspark import RDD
 from pyspark.sql.functions import unix_timestamp, udf
 from pyspark.sql.types import IntegerType
@@ -5,13 +7,19 @@ from pyspark.streaming import StreamingContext
 
 from context.aggregation_context import AggregationContext
 from context.context import Context
+from util.flume_ingestion_times import update_ingestion_times
 from util.spark_session_utils import get_spark_session_instance
 from util.string_hasher import string_hash
 
 
-def __save_to_hbase(rdd: RDD, ctx: Context):
+def __save_to_hbase(rdd: RDD, ctx: Context, data_source: str):
     if not rdd.isEmpty():
-        ctx.save_hbase(rdd.toDF())
+        df = rdd.toDF()
+        ctx.save_hbase(df)
+
+        df = df.orderBy(df["opened"].desc())
+        latest = datetime.fromtimestamp(df.first()["opened"])
+        update_ingestion_times(data_source, latest)
 
 
 def __save_aggregation(rdd: RDD, ctx: AggregationContext):
@@ -35,7 +43,7 @@ def __save_aggregation(rdd: RDD, ctx: AggregationContext):
         ctx.save_hbase(df)
 
 
-def ingest(data_type: str, ctx: Context, agg_ctx: AggregationContext):
+def ingest(data_type: str, data_source: str, ctx: Context, agg_ctx: AggregationContext):
     spark = get_spark_session_instance()
     ssc = StreamingContext(spark.sparkContext, 10)  # Check for new data every 10 seconds
     ssc.checkpoint("_checkpoint_" + data_type)
@@ -44,7 +52,7 @@ def ingest(data_type: str, ctx: Context, agg_ctx: AggregationContext):
     d_stream.pprint()
 
     # Save raw data to HBase for later batch analysis
-    d_stream.foreachRDD(lambda rdd: __save_to_hbase(rdd, ctx))
+    d_stream.foreachRDD(lambda rdd: __save_to_hbase(rdd, ctx, data_source))
 
     # Convert to format for counting service
     neighborhood_category_stream = d_stream.map(lambda row: (row.neighborhood, row.category))

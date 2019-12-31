@@ -73,7 +73,6 @@ def aggregate(data_type: str, ctx: Context):
     latest_date_from_df = daily_to_save.select(daily_to_save["day"]).collect()[0][0]
     latest_date = datetime.strptime(str(latest_date_from_df), "%Y-%m-%d")
     date_in_seconds = int((latest_date - datetime.utcfromtimestamp(0)).total_seconds())
-    print(date_in_seconds)
 
     # Create new table in MySQL if there is no timestamp
     if latest_timestamp == 0:

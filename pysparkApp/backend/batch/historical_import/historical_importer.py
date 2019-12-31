@@ -16,7 +16,8 @@ if __name__ == "__main__":
 
     import_data(IncidentHistoricalContext(),
                 spark,
-                aggregation_context)
+                aggregation_context,
+                "wg3w-h783")
 
     # Since historical incident reports are never updated, we process their daily counts in batch after import
     running_aggregated = aggregation_context.load_hbase(spark)
