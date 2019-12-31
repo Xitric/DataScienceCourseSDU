@@ -34,10 +34,9 @@ def get_batch_processed(df: DataFrame) -> DataFrame:
 
 def import_data(context: Context, spark: SparkSession, aggregator: AggregationContext, limit: int = 50000):
     # Store in HBase for further batch processing
-    csv = load_newest(context, spark)
-    # context.save_hbase(csv)
     print("Start: " + str(datetime.now()))
-    csv.write.format("csv").save("/results/data.csv")
+    csv = load_newest(context, spark)
+    context.save_hbase(csv)
     print("End: " + str(datetime.now()))
 
     # Batch process 15 minute intervals
