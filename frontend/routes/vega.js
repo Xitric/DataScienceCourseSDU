@@ -5,11 +5,6 @@ const url = require('url');
 let express = require('express');
 let router = express.Router();
 
-/* GET home page. */
-router.get('/', function (req, res) {
-    res.render('vega', {title: 'Vega Visualization', script: 'vega_vis', layout: 'layout_vega'});
-});
-
 router.get('/choro', function (req, res) {
     let mysqlClient = new MySqlClient();
     let livyClient = new LivyClient();
@@ -82,7 +77,7 @@ router.get('/choro/submit', function (req, res) {
               }));
         }
         else {
-            // Start a batch submit for a k-means analysis
+            // Start a batch submit for an aggregation
             let name = "";
 
             if (type == "incident") {
@@ -296,7 +291,7 @@ router.get('/scatter/submit', function (req, res) {
             let serviceCategories = "";
             let incidentCategories = "";
 
-            // Handles whether the req has a nothing, just a string, or an array
+            // Handles whether the req has nothing, just a string, or an array
             if (req.query.services != undefined) {
                 if (typeof(req.query.services) == "string") {
                     serviceCategories = req.query.services;
@@ -313,9 +308,6 @@ router.get('/scatter/submit', function (req, res) {
                     incidentCategories = req.query.incidents.join(";").split(' ').join('+');
                 }
             }
-
-            console.log(serviceCategories);
-            console.log(incidentCategories);
 
             livyClient.batchSubmit("correlation", [serviceCategories, incidentCategories], body => {
 

@@ -30,6 +30,8 @@ helpers = {
 
     formatCorr: function (obj) {
         let json = JSON.parse(JSON.stringify(obj));
+        if (json.length == 0) return [];
+
         let obje = {};
         for (let j = 0; j < json.length; j++) {
             const arr = json[j];
