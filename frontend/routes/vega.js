@@ -262,7 +262,7 @@ router.get('/scatter', function (req, res) {
                         data = [services, incidents, []];
                     }
                     res.render('vega_scatter', {
-                        title: 'incident and Service Correlations',
+                        title: 'Incident and Service Correlations',
                         script: 'vega_vis_scatter',
                         layout: 'layout_vega',
                         stylesheets: ["style_graph"],
