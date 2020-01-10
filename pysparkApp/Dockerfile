@@ -1,4 +1,4 @@
-FROM spark-executor:latest
+FROM xitric/spark-executor:latest
 
 RUN apt-get update && apt-get -yq install zip
 
