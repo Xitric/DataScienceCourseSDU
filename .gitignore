@@ -14,4 +14,3 @@ pysparkApp/backend/files.zip
 
 *.csv
 *.iml
-secrets.env
