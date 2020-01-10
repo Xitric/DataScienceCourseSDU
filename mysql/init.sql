@@ -54,6 +54,20 @@ create table incident_cases_monthly
 	primary key (`neighborhood`, `category`, `month`)
 );
 
+create table kmeans
+(
+	`neighborhood` varchar(128) not null,
+	`cluster` int not null,
+	primary key (`neighborhood`)
+);
+
+create table correlation
+(
+	`counter` varchar(256) not null,
+	primary key (`counter`)
+);
+
+
 -- Set up database for flume
 USE flume;
 
@@ -61,3 +75,9 @@ create table data_ingestion_latest(
 	`data_source` char(9) not null primary key,
 	`latest` datetime not null
 );
+
+ALTER USER 'client'@'%' IDENTIFIED WITH mysql_native_password BY 'H8IAQzX236eu5Ep0';
+FLUSH PRIVILEGES;
+
+ALTER USER 'spark'@'%' IDENTIFIED WITH mysql_native_password BY 'P18YtrJj8q6ioevT';
+FLUSH PRIVILEGES;
