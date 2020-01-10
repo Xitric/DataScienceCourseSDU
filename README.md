@@ -1,51 +1,30 @@
-# Datasets and exported volumes
-https://syddanskuni-my.sharepoint.com/:f:/g/personal/kdavi16_student_sdu_dk/Ev372veNCAhNiWASCXJZ8BUBAb4xyHgWPrM-2ROMWIif3Q?e=enLgO9
+# Files
 
-# Data Science Course at SDU
+All the file necessary to use this project are available on [OneDrive](https://syddanskuni-my.sharepoint.com/:f:/g/personal/kdavi16_student_sdu_dk/Ev372veNCAhNiWASCXJZ8BUBAb4xyHgWPrM-2ROMWIif3Q)
 
-The course/repo is run/maintained by Jakob Hviid <jah@mmmi.sdu.dk> and Fisayo Caleb Sangogboye <fsan@mmmi.sdu.dk>.
+# How to get started
 
-## Setup
+In order to set up this repository on your computer, you must do the following:
+1. Clone the repository to your computer
+2. Download the prepared volumes from [OneDrive](https://syddanskuni-my.sharepoint.com/:f:/g/personal/kdavi16_student_sdu_dk/Ev372veNCAhNiWASCXJZ8BUBAb4xyHgWPrM-2ROMWIif3Q), and extract the _zip_ file
+3. From the root of the project, run _import/import.cmd_
+    * Use the location of the extracted volumes as input, such as _C:/Users/Name/Desktop/Volumes_
+4. Start the cluster using _start.cmd_
+    * For stopping the cluster we recommend using _stop.cmd_ to prevent corrupting data in HBase
+5. Wait for [HDFS](http://localhost:9870/) to exit safemode and [HBase](http://localhost:16010/master-status) to initialize. This might take a few minutes
+6. You can now view different visualizations on [localhost](http://localhost:3000)
 
-In the root directory run the following from an administrative terminal:
+# Executing jobs in the cluster
 
-```bash
-docker-compose up -d
-addroute.cmd
-```
+1. Go to the [admin panel](http://localhost:3000/admin)
+2. Ensure that all files necessary for the job are uploaded under "Upload" with the type "Spark application"
+    * If using the volumes provided on [OneDrive](https://syddanskuni-my.sharepoint.com/:f:/g/personal/kdavi16_student_sdu_dk/Ev372veNCAhNiWASCXJZ8BUBAb4xyHgWPrM-2ROMWIif3Q), this has already been done
+    * If running jobs from scratch, make sure to upload the drivers for all python jobs as _py_ files to HDFS. Furthermore, the code for all python files must be uploaded to the same directory as a single _zip_ archive named _files_. Jar libraries on which the Spark applications depend must also be uploaded - these jars are available on [OneDrive](https://syddanskuni-my.sharepoint.com/:f:/g/personal/kdavi16_student_sdu_dk/Ev372veNCAhNiWASCXJZ8BUBAb4xyHgWPrM-2ROMWIif3Q).
+3. Under "Submit Spark application", write the name of the job to execute, such as _incident_aggregator_ and press "Submit"
+4. The status of the job is most easily tracked on [Livy](http://localhost:8998/ui) or by using the "Spark job status" on the admin page
 
-also, add a file to the HDFS setup by attaching to the namenode and running:
+# Building images locally
 
-```bash
-apt update
-apt install wget
-wget -O alice.txt https://www.gutenberg.org/files/11/11-0.txt
-hdfs dfs -put alice.txt /
-```
+For your convenience, all images have been uploaded to [DockerHub](https://hub.docker.com/u/xitric).
 
-A sample of how to connect to spark is provided in example.py, which currently reads the alice.txt file and makes a word count.
-
-`Important! Currently pyspark requires that it is run with python version 3.7.5 or lower so if you have python 3.8 installed it will not work.`
-[See this issue for more info](https://github.com/pyinstaller/pyinstaller/issues/4265)
-
-## Running pyspark code inside a container
-
-To run spark code inside a container, an example was created in the `pysparkExampleImage` folder. The image can be created and deployed using the run.cmd command (needs to be run from inside the folder itself).
-Change the python file as needed, and change the dockerfile to fit with your needs. For example, add python packages inside this file.
-The first time it runs, it will take several minutes to complete. Subsequent runs should be ready within a second or two.
-
-Note, to make this work, the container is attached to the "hadoop" network that is created by the docker-compose file. Also, the docker-compose file has been changed since the initial setup, which means it will have to be updated if you are running your own version. The changed components are only related to the network section of the file (added name) and the docker-compose version (changed to 3.5).
-
-## Docker compose cheat sheet
-
-Take a look [here](https://gabrieltanner.org/blog/docker-compose).
-
-## Credits
-
-This repo consists of several components created by Data Science Europe, but has been restructured into a part of a course run at the University of Southern Denmark.
-The repositories are as follows:
-
-- <https://github.com/big-data-europe/docker-hadoop>
-- <https://github.com/big-data-europe/docker-spark>
-
-To see more about how the images that are used in this course are constructed, please visit these repositories and explore the DockerFiles in the corresponding directories.
+If, for some reason, you wish to build images yourself, you must download the SHC connector from [OneDrive](https://syddanskuni-my.sharepoint.com/:f:/g/personal/kdavi16_student_sdu_dk/Ev372veNCAhNiWASCXJZ8BUBAb4xyHgWPrM-2ROMWIif3Q) and place it under _pysparkApp/_. This file is too large for GitHub, and our public fork does not permit the use of LFS.
