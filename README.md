@@ -4,8 +4,8 @@ All the file necessary to use this project are available on [OneDrive](https://s
 
 # How to get started
 
-In order to set up this repository on your local computer, you must do the following:
-1. Clone the repository to your local computer
+In order to set up this repository on your computer, you must do the following:
+1. Clone the repository to your computer
 2. Download the prepared volumes from [OneDrive](https://syddanskuni-my.sharepoint.com/:f:/g/personal/kdavi16_student_sdu_dk/Ev372veNCAhNiWASCXJZ8BUBAb4xyHgWPrM-2ROMWIif3Q?e=enLgO9), and extract the zip file
 3. From the root of the project, run _import/import.cmd_
     * Use the location of the extracted volumes as input, such as _C:Users/Name/Desktop/Volumes_
