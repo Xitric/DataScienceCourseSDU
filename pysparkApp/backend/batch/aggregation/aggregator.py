@@ -10,6 +10,7 @@ from pyspark.sql.types import FloatType, Row
 from context.context import Context
 from util.community_indicators import community_indicators
 from util.spark_session_utils import get_spark_session_instance
+from util.mysql_session_utils import get_mysql_session_instance
 
 java_date_format = "yyyy-MM-dd"
 python_date_format = "%Y-%m-%d"
@@ -25,10 +26,7 @@ def path_exist(path):
 
 
 def insert_into_db(row: Row, table: str):
-    db_connection = mysql.connector.connect(host="mysql",
-                                            user="spark",
-                                            passwd="P18YtrJj8q6ioevT",
-                                            database="analysis_results")
+    db_connection = get_mysql_session_instance()
     query = "INSERT INTO " + table + "_daily (neighborhood, category, rate, day) VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE rate = VALUES(rate);"
     insert_tuple = (row['neighborhood'], row['category'], row['rate'], row['day'])
     cursor = db_connection.cursor(prepared=True)
@@ -83,7 +81,9 @@ def aggregate(data_type: str, ctx: Context):
             user='spark',
             password='P18YtrJj8q6ioevT').mode('overwrite').save()
     else:
-        daily_to_save.foreach(lambda row: insert_into_db(row, data_type))
+        # You have to do this for it to work. Without the limit it crashes.
+        count = daily_to_save.count()
+        daily_to_save.limit(count).foreach(lambda row: insert_into_db(row, data_type))
 
     timestamp_df = spark.createDataFrame([(date_in_seconds,)], ["date"])  # Spark expects a tuple
     timestamp_df.repartition(1).write.format("csv").mode("overwrite").save(
